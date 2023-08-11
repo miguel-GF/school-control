@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Utils;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,8 +17,7 @@ class AlumnoMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $session = Session();
-        $user = $session->get("user", null);
+        $user = Utils::getUser();
         if (!is_null($user)) {
             if ($user->tipo == "alumno") {
                 return $next($request);

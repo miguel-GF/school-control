@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Utils;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,8 +18,7 @@ class DocenteMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $session = Session();
-        $user = $session->get("user", null);
+        $user = Utils::getUser();
         if (!is_null($user)) {
             if ($user->tipo == "docente") {
                 return $next($request);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Utils;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -17,8 +18,7 @@ class LoginMiddleware
      */
     public function handle(Request $request, Closure $next, ...$guards): Response
     {
-        $session = Session();
-        $user = $session->get("user", null);
+        $user = Utils::getUser();
         if (Session::has("user")) { 
             if ($user->tipo == "docente") {
                 return Inertia::location(route("docente.dashboard"));
