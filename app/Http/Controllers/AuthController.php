@@ -41,7 +41,7 @@ class AuthController extends Controller
     {
         // Auth::logout();
         $session = Session();
-        $session->forget('usuario');
+        $session->flush();
         return redirect()->route('login');
     }
 }
