@@ -20,12 +20,25 @@ export default {
       if (this.datos.tag == 'cerrarSesion') {
         this.logout();
       } else {
-        console.log('otra acción');
+        this.redirect();
       }
     },
     logout() {
       this.$inertia.post("/logout");
     },
+    redirect() {
+      let url;
+      switch (this.datos.tag) {
+        case 'calificaciones':
+        url = "/alumno/calificaciones";
+          break;
+      
+        default:
+          url = "";
+          break;
+      }
+      this.$inertia.get(url);
+    }
   },
 };
 </script>

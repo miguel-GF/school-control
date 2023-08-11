@@ -1,5 +1,6 @@
 <template>
-	<q-layout view="hHh lpR fFf">
+	<!-- view="hHh lpR fFf " -->
+	<q-layout>
 		<q-header reveal elevated class="bg-primary text-white">
 			<q-toolbar>
 				<q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
@@ -14,6 +15,9 @@
 					<Link class="cursor-pointer" as="label" v-else-if="$page.props.usuario.tipo == 'docente'"
 						href="/docente/dashboard">Home</Link>
 				</q-toolbar-title>
+				<div class="text-left q-pr-sm">
+					{{ $page.props.usuario.nombre || '--' }}
+				</div>
 
 				<q-btn dense flat round icon="settings" @click="toggleRightDrawer" />
 			</q-toolbar>
