@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ViewController;
 use Illuminate\Support\Facades\Route;
@@ -16,4 +17,5 @@ Route::prefix('docente')->middleware('docente')->group(function () {
 
 Route::prefix('alumno')->middleware('alumno')->group(function () {
   Route::get('dashboard', [ViewController::class, 'alumnoDashboardView'])->name('alumno.dashboard');
+  Route::get('calificaciones', [AlumnoController::class, 'alumnoCalificacionesView'])->name('alumno.calificaciones');
 });
