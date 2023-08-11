@@ -5,7 +5,7 @@ use App\Http\Controllers\ViewController;
 use Illuminate\Support\Facades\Route;
 
 // login
-Route::get('/login', [ViewController::class, 'loginView'])->name('login');
+Route::get('/login', [ViewController::class, 'loginView'])->middleware('login')->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
