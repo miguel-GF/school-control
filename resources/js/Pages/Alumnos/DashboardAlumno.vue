@@ -1,24 +1,17 @@
 <template>
-  <div>
-    <h1 class="text-3xl font-semibold mb-4">Welcome to the ALUMNO Dashboard!</h1>
-    <p class="text-gray-600">You are logged in as {{ usuario.nombre || '--' }}</p>
-    <p class="text-gray-600">usuario Type: {{ usuario.tipo || '--' }}</p>
-    <button
-      @click="logout"
-      class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
-    >
-      Logout
-    </button>
-  </div>
+  <MainLayout>
+    <div class="text-center">
+      <h2>Bienvenido Alumno</h2>
+      <h2>{{ `${usuario.nombre || '--'}` }}</h2>
+      <p class="text-body1 text-primary">{{ usuario.numestudiante || '--' }}</p>
+    </div>
+  </MainLayout>
 </template>
 
 <script>
+import MainLayout from '../../Layouts/MainLayout.vue';
 export default {
   props: ["usuario"],
-  methods: {
-    logout() {
-      this.$inertia.post("/logout");
-    },
-  },
+  components: { MainLayout }
 };
 </script>
