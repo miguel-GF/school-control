@@ -10,10 +10,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
 // ->middleware('auth')
-Route::prefix('docente')->group(function () {
+Route::prefix('docente')->middleware('docente')->group(function () {
   Route::get('dashboard', [ViewController::class, 'docenteDashboardView'])->name('docente.dashboard');
 });
 
-Route::prefix('alumno')->group(function () {
+Route::prefix('alumno')->middleware('alumno')->group(function () {
   Route::get('dashboard', [ViewController::class, 'alumnoDashboardView'])->name('alumno.dashboard');
 });
