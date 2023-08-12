@@ -25,6 +25,7 @@
 <script>
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { formatearNumero } from '../../Utils/format';
+import { loading } from '../../Utils/loading';
 export default {
   props: ["calificaciones"],
   components: { MainLayout },
@@ -99,5 +100,8 @@ export default {
       ]
     }
   },
+  created() {
+    loading(false);
+  }
 };
 </script>

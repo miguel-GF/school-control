@@ -131,6 +131,7 @@
 
 <script>
 import { notify } from "../Utils/notify.js";
+import { loading } from "../Utils/loading.js";
 export default {
   data() {
     return {
@@ -142,6 +143,9 @@ export default {
       tab: "alumnos",
       mostrarSpinner: false,
     };
+  },
+  created() {
+    loading(false);
   },
   updated() {
     this.mostrarSpinner = false;

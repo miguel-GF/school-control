@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import { loading } from '../Utils/loading';
 export default {
   props: {
     datos: {
@@ -17,6 +18,7 @@ export default {
   },
   methods: {
     onClick() {
+      loading(true, 'Cargando ...')
       if (this.datos.tag == 'cerrarSesion') {
         this.logout();
       } else {
