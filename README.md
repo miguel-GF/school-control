@@ -1,5 +1,13 @@
 
-### **Proyecto realizado con Laravel x10, Vue3 e Inertia**
+### **Proyecto sistema escolar**
+
+Desarrollado con:
++ Laravel 10
++ Inertia
++ Vue 3
++ Quasar 2
++ Node.js 18
++ Php 8.1
 
 Instalar dependencias de npm
 ```bash
