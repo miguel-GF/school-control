@@ -3,8 +3,6 @@
 namespace App\Repos\Data;
 
 use App\Constants;
-use App\Models\Alumno;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class AlumnoRepoData
@@ -19,6 +17,7 @@ class AlumnoRepoData
   {
     $query = DB::table('Calificaciones as c')
       ->select(
+        'c.numestudiante',
         'c.cvemat',
         'c.materia',
         'c.periodo',
