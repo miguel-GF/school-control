@@ -30,7 +30,7 @@
 						<ItemMenu :datos="opc" />
 					</template>
 				</template>
-				<template v-else-if="$page.props.usuario.tipo == 'docentes'">
+				<template v-else-if="$page.props.usuario.tipo == 'docente'">
 					<template v-for="(opc, i) in opcionesDocentes" :key="i">
 						<ItemMenu :datos="opc" />
 					</template>
@@ -64,7 +64,7 @@ const opcionesAlumnos = ref([
 	{ label: "Calificaciones", tag: "calificaciones", icon: "list" },
 ]);
 const opcionesDocentes = ref([
-	{ label: "Alumnos", tag: "alumnos", icon: "person" },
+	{ label: "Cargas Académicas", tag: "cargasAcademicas", icon: "person" },
 ]);
 const opcionesConfiguracion = ref([
 	{ label: "Cerrar Sesión", tag: "cerrarSesion", icon: "logout" },

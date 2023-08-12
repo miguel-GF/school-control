@@ -30,9 +30,13 @@ export default {
       let url;
       switch (this.datos.tag) {
         case 'calificaciones':
-        url = "/alumno/calificaciones";
+          url = "/alumno/calificaciones";
           break;
       
+        case 'cargasAcademicas':
+          url = "/docente/cargasAcademicas";
+          break;
+
         default:
           url = "";
           break;
