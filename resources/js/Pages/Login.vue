@@ -57,9 +57,15 @@
                     <q-btn
                       color="primary"
                       type="submit"
+                      v-if="!mostrarSpinner"
                     >
                       Iniciar Sesión
                     </q-btn>
+                    <q-spinner-oval
+                      v-else
+                      color="primary"
+                      size="2em"
+                    />
                   </div>
                 </q-form>
               </q-tab-panel>
@@ -101,9 +107,15 @@
                     <q-btn
                       color="primary"
                       type="submit"
+                      v-if="!mostrarSpinner"
                     >
                       Iniciar Sesión
                     </q-btn>
+                    <q-spinner-oval
+                      v-else
+                      color="primary"
+                      size="2em"
+                    />
                   </div>
                 </q-form>
               </q-tab-panel>
@@ -118,6 +130,7 @@
 </template>
 
 <script>
+import { notify } from "../Utils/notify.js";
 export default {
   data() {
     return {
@@ -127,25 +140,39 @@ export default {
         tipo: "alumno"
       },
       tab: "alumnos",
+      mostrarSpinner: false,
     };
   },
+  updated() {
+    this.mostrarSpinner = false;
+    const { status, error } = this.$page.props;
+    if (status >= 300) {
+      this.showNotif(error, 'error');
+    }
+  },
   methods: {
-    submitForm() {
+    async submitForm() {
       let form = {};
-      if (this.form.tipo == 'alumno') {
-        form = {
-          numeroEstudiante: this.form.usuario,
-          password: this.form.password,
-          tipo: "alumno"
+      try {
+        
+        this.mostrarSpinner = true;
+        if (this.form.tipo == 'alumno') {
+          form = {
+            numeroEstudiante: this.form.usuario,
+            password: this.form.password,
+            tipo: "alumno"
+          }
+        } else {
+          form = {
+            correo: this.form.usuario,
+            password: this.form.password,
+            tipo: "docente"
+          }
         }
-      } else {
-        form = {
-          correo: this.form.usuario,
-          password: this.form.password,
-          tipo: "docente"
-        }
+        this.$inertia.post("/login", form);
+      } catch (error) {
+        notify(error, 'error');
       }
-      this.$inertia.post("/login", form);
     },
     guardarTipo(tipo) {
       this.form.tipo = tipo;
@@ -153,6 +180,9 @@ export default {
     limpiarDatos() {
       this.form.usuario = "";
       this.form.password = "";
+    },
+    showNotif (message, tipo) {
+      return notify(message, tipo);
     }
   },
 };

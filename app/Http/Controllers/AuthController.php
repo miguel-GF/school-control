@@ -31,10 +31,14 @@ class AuthController extends Controller
             }
         }
 
-        return Inertia::location(route('login', [
-            'error' => 300,
-            'mesaje' => 'Usuario o contraseña incorrecto',
-        ]));
+        return Inertia::render('Login', [
+            'status' => 300,
+            'error' => 'Usuario o contraseña incorrecto'
+        ]);
+        // return Inertia::location(route('login', [
+        //     'error' => 300,
+        //     'mesaje' => 'Usuario o contraseña incorrecto',
+        // ]));
     }
 
     public function logout()
