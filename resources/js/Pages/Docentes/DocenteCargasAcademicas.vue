@@ -24,6 +24,15 @@
             </div>
           </q-td>
         </template>
+        <template v-slot:body-cell-asistencia="props">
+          <q-td :props="props">
+            <q-btn dense color="primary" flat round icon="check" @click="irPasarAsistencia(props.row)">
+              <q-tooltip>
+                Pasar Asistencia
+              </q-tooltip>
+            </q-btn>
+          </q-td>
+        </template>
       </q-table>
     </div>
   </MainLayout>
@@ -32,8 +41,9 @@
 <script>
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
+import { notify } from "../../Utils/notify.js";
 export default {
-  props: ["cargasAcademicas"],
+  props: ["cargasAcademicas", "status","mensaje"],
   components: { MainLayout },
   data() {
     return {
@@ -127,11 +137,32 @@ export default {
           format: val => val ?? '--',
           sortable: false
         },
+        {
+          name: 'asistencia',
+          align: 'center',
+          sortable: false
+        },
       ]
     }
   },
   created() {
     loading(false);
+  },
+  updated() {
+    const { status, mensaje } = this.$page.props;
+    if (status == 200) {
+      this.showNotif(mensaje, 'exito');
+    }
+  },
+  methods: {
+    irPasarAsistencia({ clavemat }) {
+      loading(true, 'Cargando ...');
+      const url = "/docente/pasarAsistencias/" + clavemat;
+      this.$inertia.get(url);
+    },
+    showNotif (message, tipo) {
+      return notify(message, tipo);
+    }
   }
 };
 </script>

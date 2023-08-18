@@ -16,4 +16,19 @@ class DocenteServiceData
   {
     return DocenteRepoData::obtenerCargasAcademicasPorId($datos);
   }
+
+  /**
+   * obtenerAlumnosPorCargaAcademica
+   *
+   * @param  mixed $datos [idProf, claveMateria]
+   * @return array
+   */
+  public static function obtenerAlumnosPorCargaAcademica(array $datos)
+  {
+    $alumnos = DocenteRepoData::obtenerAlumnosPorCargaAcademica($datos);
+    foreach ($alumnos as $alumno) {
+      $alumno->asistencia = false;
+    }
+    return $alumnos;
+  }
 }

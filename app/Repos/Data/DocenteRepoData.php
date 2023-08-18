@@ -4,6 +4,7 @@ namespace App\Repos\Data;
 
 use App\Constants;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DocenteRepoData
 {
@@ -35,7 +36,35 @@ class DocenteRepoData
       ->orderBy('ca.licenciatura')
       ->orderBy('ca.materia')
       ;
-      // ->orderBy('ca.materia');
+
+    return $query->get()->toArray();
+  }
+
+  /**
+   * obtenerCalificacionesPorId
+   *
+   * @param  mixed $datos [idProf, claveMateria]
+   * @return array
+   */
+  public static function obtenerAlumnosPorCargaAcademica(array $datos)
+  {
+    $query = DB::table('CargaAcademica as ca')
+      ->select(
+        'ca.idprof',
+        'ca.clavemat',
+        'ca.licenciatura',
+        'ca.semestre',
+        'ca.grupo',
+        'ca.materia',
+        'ca.periodo',
+        'c.numestudiante',
+        'c.alumno as alumno_nombre'
+      )
+      ->join('Calificaciones as c', 'c.cvemat', 'ca.clavemat')
+      ->where('ca.idprof', $datos['idProf'])
+      ->where('ca.claveMat', $datos['claveMateria'])
+      ->orderBy('c.alumno')
+      ;
 
     return $query->get()->toArray();
   }
