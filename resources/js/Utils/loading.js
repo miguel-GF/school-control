@@ -1,6 +1,6 @@
 import { Loading, QSpinnerFacebook } from "quasar";
 
-export const loading = (show, message) => {
+export const loading = (show, message = 'Cargando ...') => {
     show
         ? Loading.show({
               delay: 0,
