@@ -200,7 +200,7 @@ export default {
     transform: translate(-50%, -50%);
   }
   .background-image {
-    background-image: url('/images/bg-login.jpg');
+    background-image: url('/resources/images/bg-login.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
