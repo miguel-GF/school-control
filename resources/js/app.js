@@ -4,14 +4,15 @@ import { createApp, h } from "vue";
 import { createInertiaApp } from "@inertiajs/inertia-vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { Quasar, Notify, Loading } from "quasar";
-import TheDialogConfirm from "./Components/TheDialogConfirm.vue"
-import TheDialogResponse from "./Components/TheDialogResponse.vue"
+import langEs from 'quasar/lang/es';
+import TheDialogConfirm from "./Components/TheDialogConfirm.vue";
+import TheDialogResponse from "./Components/TheDialogResponse.vue";
 
 // Import icon libraries
-import '@quasar/extras/material-icons/material-icons.css'
+import '@quasar/extras/material-icons/material-icons.css';
 
 // Import Quasar css
-import 'quasar/src/css/index.sass'
+import 'quasar/src/css/index.sass';
 
 // Images assets
 import.meta.glob([ '../images/**', ]);
@@ -27,7 +28,8 @@ createInertiaApp({
     const vueApp = createApp({ render: () => h(app, props) })
     .use(plugin)
     .use(Quasar, {
-      plugins: { Notify, Loading }
+      plugins: { Notify, Loading },
+      lang: langEs
     });
     vueApp.component('the-dialog-confirm', TheDialogConfirm);
     vueApp.component('the-dialog-response', TheDialogResponse);
