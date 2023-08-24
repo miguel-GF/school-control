@@ -12,7 +12,9 @@
       <q-separator />
 
       <q-card-section class="card-body-height scroll">
-        <div v-html="mensaje"></div>
+        <slot name="body">
+          <div v-html="mensaje"></div>
+        </slot>
       </q-card-section>
 
       <q-separator />
