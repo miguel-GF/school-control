@@ -3,7 +3,7 @@
 	<q-layout>
 		<q-header reveal elevated class="bg-primary text-white">
 			<q-toolbar>
-				<q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+				<q-btn dense flat round icon="las la-bars" @click="toggleLeftDrawer" />
 
 				<q-toolbar-title>
 					<!-- <q-avatar>
@@ -19,7 +19,7 @@
 					{{ $page.props.usuario.nombre || '--' }}
 				</div>
 
-				<q-btn dense flat round icon="settings" @click="toggleRightDrawer" />
+				<q-btn dense flat round icon="las la-cog" @click="toggleRightDrawer" />
 			</q-toolbar>
 		</q-header>
 
@@ -61,13 +61,13 @@ import { Link } from "@inertiajs/inertia-vue3";
 const leftDrawerOpen = ref(false);
 const rightDrawerOpen = ref(false);
 const opcionesAlumnos = ref([
-	{ label: "Calificaciones", tag: "calificaciones", icon: "list" },
+	{ label: "Calificaciones", tag: "calificaciones", icon: "las la-school" },
 ]);
 const opcionesDocentes = ref([
-	{ label: "Cargas Académicas", tag: "cargasAcademicas", icon: "person" },
+	{ label: "Cargas Académicas", tag: "cargasAcademicas", icon: "las la-calendar-alt" },
 ]);
 const opcionesConfiguracion = ref([
-	{ label: "Cerrar Sesión", tag: "cerrarSesion", icon: "logout" },
+	{ label: "Cerrar Sesión", tag: "cerrarSesion", icon: "las la-sign-out-alt" },
 ]);
 const toggleLeftDrawer = () => leftDrawerOpen.value = !leftDrawerOpen.value;
 const toggleRightDrawer = () => rightDrawerOpen.value = !rightDrawerOpen.value;
