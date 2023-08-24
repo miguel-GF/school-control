@@ -2,7 +2,6 @@
   <MainLayout>
     <div class="q-pa-md">
       <q-table 
-        title="Cargas Académicas"
         :rows="cargasAcademicas"
         :columns="columns"
         :rows-per-page-options="[10]"
@@ -10,6 +9,27 @@
         class="tabla-listado striped-table"
         row-key="cvemat" 
       >
+        <template v-slot:top-left>
+          <div class="row">
+            <div class="text-h6 q-pr-md q-my-auto">Cargas Académicas</div>
+            <div class="w250">
+              <q-select 
+                :options="periodos"
+                option-label="periodo"
+                option-value="periodo"
+                outlined dense
+                emit-value
+                v-model="filtros.periodo"
+                clearable
+                @update:modelValue="filtrarCargas"
+              >
+                <template v-slot:selected v-if="!filtros.periodo">
+                  Todos los periodos
+                </template>
+              </q-select>
+            </div> 
+          </div>
+        </template>
         <template v-slot:top-right>
           <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
             <template v-slot:append>
@@ -43,11 +63,14 @@ import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
 import { notify } from "../../Utils/notify.js";
 export default {
-  props: ["cargasAcademicas", "status","mensaje"],
+  props: ["cargasAcademicas", "periodos", "usuario", "filtrosRes", "status", "mensaje"],
   components: { MainLayout },
   data() {
     return {
       filter: "",
+      filtros: {
+        periodo: ""
+      },
       columns: [
         {
           name: 'semestre',
@@ -145,6 +168,9 @@ export default {
       ]
     }
   },
+  beforeMount() {
+    this.filtros.periodo = this.filtrosRes['periodo'] ?? "";
+  },
   created() {
     loading(false);
   },
@@ -162,6 +188,13 @@ export default {
     },
     showNotif (message, tipo) {
       return notify(message, tipo);
+    },
+    filtrarCargas() {
+      setTimeout(() => {
+        loading(true);
+        const currentRoute = window.location.href;
+        this.$inertia.get(currentRoute, this.filtros);
+      }, 300);
     }
   }
 };

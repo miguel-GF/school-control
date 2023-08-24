@@ -10,7 +10,7 @@ class AlumnoRepoData
   /**
    * obtenerCalificacionesPorId
    *
-   * @param  mixed $datos [numEstudiante]
+   * @param  mixed $datos [numEstudiante, periodo?]
    * @return array
    */
   public static function obtenerCalificacionesPorId(array $datos)

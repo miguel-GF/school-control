@@ -2,19 +2,24 @@
 
 namespace App\Services\Data;
 
+use App\Repos\Data\CargaAcademicaRepoData;
 use App\Repos\Data\DocenteRepoData;
+use stdClass;
 
 class DocenteServiceData
 {
   /**
    * obtenerCalificacionesPorId
    *
-   * @param  mixed $datos [idProf]
-   * @return array
+   * @param  mixed $datos [idProf, periodo?]
+   * @return stdClass
    */
-  public static function obtenerCalificacionesPorId(array $datos)
+  public static function obtenerDataCargasAcademicasPorId(array $datos)
   {
-    return DocenteRepoData::obtenerCargasAcademicasPorId($datos);
+    $res = new stdClass();
+    $res->periodos = CargaAcademicaRepoData::obtenerPeriodosCargasAcademicas();
+    $res->cargasAcademicas = DocenteRepoData::obtenerCargasAcademicasPorId($datos);
+    return $res;
   }
 
   /**

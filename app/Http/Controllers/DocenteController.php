@@ -6,20 +6,32 @@ use App\Services\Actions\DocenteServiceAction;
 use App\Services\Data\DocenteServiceData;
 use App\Utils;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DocenteController extends Controller
 {
-	public function docenteCargasAcademicasView()
+	public function docenteCargasAcademicasView(Request $request)
 	{
-		$user = Utils::getUser();
-		$cargasAcademicas = DocenteServiceData::obtenerCalificacionesPorId([
-			'idProf' => $user->idusuarios,
-		]);
-		return Inertia::render('Docentes/DocenteCargasAcademicas', [
-			'cargasAcademicas' => $cargasAcademicas,
-			'usuario' => $user,
-		]);
+		try {
+			$user = Utils::getUser();
+			$datos = $request->all();
+			$res = DocenteServiceData::obtenerDataCargasAcademicasPorId([
+				'idProf' => $user->idusuarios,
+				'periodo' => $datos['periodo'] ?? "",
+			]);
+			$filtros['periodo'] = $datos['periodo'] ?? "";
+			return Inertia::render('Docentes/DocenteCargasAcademicas', [
+				'cargasAcademicas' => $res->cargasAcademicas,
+				'periodos' => $res->periodos,
+				'usuario' => $user,
+				'filtrosRes' => $filtros,
+			]);
+		
+		} catch (\Throwable $th) {
+			Log::error('Error en docente cargas academicas view' . $th);
+			throw $th;
+		}
 	}
 	
 	/**

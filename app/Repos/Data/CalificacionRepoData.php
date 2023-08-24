@@ -2,7 +2,6 @@
 
 namespace App\Repos\Data;
 
-use App\Constants;
 use Illuminate\Support\Facades\DB;
 
 class CalificacionRepoData

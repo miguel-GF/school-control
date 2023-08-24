@@ -11,7 +11,7 @@ class DocenteRepoData
   /**
    * obtenerCalificacionesPorId
    *
-   * @param  mixed $datos [idProf]
+   * @param  mixed $datos [idProf, periodo?]
    * @return array
    */
   public static function obtenerCargasAcademicasPorId(array $datos)
@@ -23,6 +23,7 @@ class DocenteRepoData
         'ca.licenciatura',
         'ca.materia',
         'ca.semestre',
+        'ca.periodo',
         'ca.grupo',
         'ca.lun',
         'ca.mar',
@@ -34,8 +35,11 @@ class DocenteRepoData
       ->where('ca.idprof', $datos['idProf'])
       ->whereRaw("LOWER(ca.status) = ?", [strtolower(Constants::ACTIVO_STATUS)])
       ->orderBy('ca.licenciatura')
-      ->orderBy('ca.materia')
-      ;
+      ->orderBy('ca.materia');
+
+    if (!empty($datos['periodo'])) {
+      $query->where('ca.periodo', $datos['periodo']);
+    }
 
     return $query->get()->toArray();
   }
