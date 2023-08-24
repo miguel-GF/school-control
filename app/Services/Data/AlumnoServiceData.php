@@ -3,17 +3,22 @@
 namespace App\Services\Data;
 
 use App\Repos\Data\AlumnoRepoData;
+use App\Repos\Data\CalificacionRepoData;
+use stdClass;
 
 class AlumnoServiceData
 {
   /**
    * obtenerCalificacionesPorId
    *
-   * @param  mixed $datos [numEstudiante]
-   * @return array
+   * @param  mixed $datos [numEstudiante, periodo?]
+   * @return stdClass
    */
-  public static function obtenerCalificacionesPorId(array $datos)
+  public static function obteneDataCalificaciones(array $datos)
   {
-    return AlumnoRepoData::obtenerCalificacionesPorId($datos);
+    $res = new stdClass;
+    $res->periodos = CalificacionRepoData::obtenerPeriodosCalificaciones();
+    $res->calificaciones = AlumnoRepoData::obtenerCalificacionesPorId($datos);
+    return $res;
   }
 }

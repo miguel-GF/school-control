@@ -35,6 +35,10 @@ class AlumnoRepoData
       ->whereRaw("LOWER(c.status) = ?", [strtolower(Constants::ACTIVO_STATUS)])
       ->orderBy('c.materia');
 
+    if (!empty($datos['periodo'])) {
+      $query->where('c.periodo', $datos['periodo']);
+    }
+
     return $query->get()->toArray();
   }
 }

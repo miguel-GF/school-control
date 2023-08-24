@@ -1,8 +1,7 @@
 <template>
   <MainLayout>
     <div class="q-pa-md">
-      <q-table 
-        title="Calificaciones"
+      <q-table
         :rows="calificaciones"
         :columns="columns"
         :rows-per-page-options="[10]"
@@ -10,6 +9,27 @@
         class="tabla-listado striped-table"
         row-key="cvemat" 
       >
+        <template v-slot:top-left>
+          <div class="row">
+            <div class="text-h6 q-pr-md q-my-auto">Calificaciones</div>
+            <div class="w250">
+              <q-select 
+                :options="periodos"
+                option-label="periodo"
+                option-value="periodo"
+                outlined dense
+                emit-value
+                v-model="filtros.periodo"
+                clearable
+                @update:modelValue="filtrarCalificaciones"
+              >
+                <template v-slot:selected v-if="!filtros.periodo">
+                  Todos los periodos
+                </template>
+              </q-select>
+            </div> 
+          </div>
+        </template>
         <template v-slot:top-right>
           <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
             <template v-slot:append>
@@ -27,11 +47,14 @@ import MainLayout from '../../Layouts/MainLayout.vue';
 import { formatearNumero } from '../../Utils/format';
 import { loading } from '../../Utils/loading';
 export default {
-  props: ["calificaciones"],
+  props: ["calificaciones", "periodos", "usuario", "filtrosRes"],
   components: { MainLayout },
   data() {
     return {
       filter: "",
+      filtros: {
+        periodo: ""
+      },
       columns: [
         {
           name: 'claveMateria',
@@ -97,11 +120,23 @@ export default {
           format: val => formatearNumero(val),
           sortable: true
         },
-      ]
+      ],
     }
+  },
+  beforeMount() {
+    this.filtros.periodo = this.filtrosRes['periodo'] ?? "";
   },
   created() {
     loading(false);
+  },
+  methods: {
+    filtrarCalificaciones() {
+      setTimeout(() => {
+        loading(true);
+        const currentRoute = window.location.href;
+        this.$inertia.get(currentRoute, this.filtros);
+      }, 300);
+    }
   }
 };
 </script>
