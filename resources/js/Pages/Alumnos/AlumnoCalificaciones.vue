@@ -73,6 +73,22 @@ export default {
           sortable: true
         },
         {
+          name: 'semestre',
+          label: 'Semestre',
+          align: 'left',
+          field: row => row.semestre,
+          format: val => val ?? '--',
+          sortable: true
+        },
+        {
+          name: 'grupo',
+          label: 'Grupo',
+          align: 'left',
+          field: row => row.grupo,
+          format: val => val ?? '--',
+          sortable: true
+        },
+        {
           name: 'periodo',
           label: 'Periodo',
           align: 'left',

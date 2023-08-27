@@ -21,6 +21,8 @@ class AlumnoRepoData
         'c.cvemat',
         'c.materia',
         'c.periodo',
+        'c.semestre',
+        'c.grupo',
         'c.alumno',
         'c.asistencias',
         'c.faltas',
