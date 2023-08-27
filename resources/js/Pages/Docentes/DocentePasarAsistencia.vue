@@ -13,21 +13,37 @@
       >
         <template v-slot:top>
           <div class="row col-12">
-            <div class="col-2">
+            <div class="col-sm-6 col-md">
               <div class="text-bold">Pasar Asistencia - {{ obtenerPeriodo }}</div>
               <div class="text-bold">{{ obtenerSemestreGrupo }}</div>
             </div>
-            <div class="col q-my-auto">
+            <div class="col-sm-6 col-md-4 q-my-auto ellipsis-2-lines text-left">
               {{ obtenerLicenciaturaMateria }}
             </div>
-            <div class="col-2">
+            <div class="col-sm-4 col-md-2 text-left row" >
+              <div class="q-my-auto q-pr-xs">Fecha asistencia:</div>
+              <q-input class="col" hide-bottom-space outlined dense v-model="fecha" mask="date" :rules="['date']">
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="fecha" :options="optionsFn">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+            <div class="col-sm-4 col-md-3 q-pl-md">
               <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
                 <template v-slot:append>
                   <q-icon name="search" />
                 </template>
               </q-input>
             </div>
-            <div class="col-1 text-right">
+            <div class="col-sm-4 col-md-1 text-right">
               <q-btn dense color="primary" flat round icon="save" @click="confirmarAsistencias()">
                 <q-tooltip anchor="bottom left">
                   Guardar Asistencias
@@ -47,31 +63,7 @@
       @aceptar="guardarAsistencias()"
     >
       <template #body>
-        <div class="row q-mb-md">
-          <div class="col-2"></div>
-          <div class="col-4 q-mt-sm">
-            Fecha de Asistencia:
-          </div>
-          <div class="col-4">
-            <q-input outlined dense v-model="fecha" mask="date" :rules="['date']">
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="fecha" :options="optionsFn">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Close" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
-          <div class="col-2"></div>
-        </div>
-        
         <q-banner rounded class="col-12 bg-orange-4" v-html="obtenerMensajeConfirmacion">
-
         </q-banner>
       </template>
     </the-dialog-confirm>
@@ -180,16 +172,23 @@ export default {
   },
   methods: {
     confirmarAsistencias() {
-      this.mostrarModalConfirmar = true;
+      try {
+        this.validarFechas();
+        this.mostrarModalConfirmar = true;
+      } catch (error) {
+        return notify(error, 'error');
+      }
     },
-    guardarAsistencias() {
+    validarFechas() {
       if (!this.fecha) {
-        return notify('Debe seleccionar una fecha', 'error');
+        throw ('Debe introducir la fecha de asistencia');
       }
       const resValidacionFecha = esFechaValida(this.fecha);
       if (resValidacionFecha.status  >= 300) {
-        return notify(resValidacionFecha.mensaje, 'error');
+        throw (resValidacionFecha.mensaje);
       }
+    },
+    guardarAsistencias() {
       this.mostrarModalConfirmar = false;
       let alumnosCopia = [...this.alumnos];
       this.alumnosSeleccionados.forEach(as => {
