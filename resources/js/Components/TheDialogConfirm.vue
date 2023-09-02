@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="mostrar" persistent>
-    <q-card class="card-width">
+    <q-card :class="classes">
       <q-card-section class="row">
         <div class="text-h6 ellipsis">{{ titulo }}</div>
         <q-space></q-space>
@@ -42,6 +42,10 @@ export default {
       type: String,
       default: 'Mensaje default ...',
     },
+    classes: {
+      type: String,
+      default: 'card-width',
+    },
   },
   methods: {
     cerrar() {
@@ -61,6 +65,6 @@ export default {
 
 .card-body-height {
   min-height: 25vh;
-  max-height: 50vh;
+  max-height: 52vh;
 }
 </style>
