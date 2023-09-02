@@ -33,6 +33,29 @@ class DocenteController extends Controller
 			throw $th;
 		}
 	}
+
+	public function docenteAsistenciasCargasAcademicasView(Request $request)
+	{
+		try {
+			$user = Utils::getUser();
+			$datos = $request->all();
+			$res = DocenteServiceData::obtenerDataCargasAcademicasPorId([
+				'idProf' => $user->idusuarios,
+				'periodo' => $datos['periodo'] ?? "",
+			]);
+			$filtros['periodo'] = $datos['periodo'] ?? "";
+			return Inertia::render('Docentes/DocenteAsistenciasCargasAcademicas', [
+				'cargasAcademicas' => $res->cargasAcademicas,
+				'periodos' => $res->periodos,
+				'usuario' => $user,
+				'filtrosRes' => $filtros,
+			]);
+		
+		} catch (\Throwable $th) {
+			Log::error('Error en docente asistencias cargas academicas view' . $th);
+			throw $th;
+		}
+	}
 	
 	/**
 	 * docentePasarAsistenciaCargasAcademicasView

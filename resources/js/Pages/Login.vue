@@ -151,7 +151,7 @@ export default {
     this.mostrarSpinner = false;
     const { status, error } = this.$page.props;
     if (status >= 300) {
-      this.showNotif(error, 'error');
+      this.showNotify(error, 'error');
     }
   },
   methods: {
@@ -185,7 +185,7 @@ export default {
       this.form.usuario = "";
       this.form.password = "";
     },
-    showNotif (message, tipo) {
+    showNotify (message, tipo) {
       return notify(message, tipo);
     }
   },

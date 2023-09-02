@@ -11,7 +11,7 @@
       >
         <template v-slot:top-left>
           <div class="row">
-            <div class="text-h6 q-pr-md q-my-auto">Cargas Académicas</div>
+            <div class="text-h6 q-pr-md q-my-auto">Generar Reporte de Cargas Académicas</div>
             <div class="w250">
               <q-select 
                 :options="periodos"
@@ -46,15 +46,38 @@
         </template>
         <template v-slot:body-cell-asistencia="props">
           <q-td :props="props">
-            <q-btn dense color="primary" flat round icon="check" @click="irPasarAsistencia(props.row)">
-              <q-tooltip>
-                Pasar Asistencia
+            <q-btn dense color="primary" flat round icon="las la-calendar-check" @click="abrirModalConfirmacion(props.row)">
+              <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">
+                Ver Reporte de Asistencias
               </q-tooltip>
             </q-btn>
           </q-td>
         </template>
       </q-table>
     </div>
+    <!-- MODALES -->
+    <!-- DIALOGO DE CONFIRMACION -->
+    <the-dialog-confirm
+      :mostrar="mostrarModalConfirmar"
+      classes="w700-i"
+      titulo="Seleccionar Fecha del Reporte de Asistencia"
+      @cerrar="mostrarModalConfirmar = false"
+      @aceptar="verReporte()"
+    >
+      <template #body>
+        <div class="col-12 q-pa-sm">
+          <div class="col-sm-6 col-md q-mb-md">
+            <div class="text-bold">{{ cargaAcademica.licenciatura }}</div>
+            <div class="text-bold">{{ `${cargaAcademica.periodo} | ${cargaAcademica.semestre || '--' }° ${cargaAcademica.grupo || '--'}` }}</div>
+          </div>
+          <q-date
+            v-model="fecha"
+            landscape
+            style="width: 100% !important"
+          />
+        </div>
+      </template>
+    </the-dialog-confirm>
   </MainLayout>
 </template>
 
@@ -62,11 +85,15 @@
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
 import { notify } from "../../Utils/notify.js";
+import { obtenerFechaActualOperacion, esFechaValida } from '../../Utils/date';
 export default {
+  name: "DocenteAsistenciasCargasAcademicas",
   props: ["cargasAcademicas", "periodos", "usuario", "filtrosRes", "status", "mensaje"],
   components: { MainLayout },
   data() {
     return {
+      mostrarModalConfirmar: false,
+      cargaAcademica: {},
       filter: "",
       filtros: {
         periodo: ""
@@ -165,7 +192,8 @@ export default {
           align: 'center',
           sortable: false
         },
-      ]
+      ],
+      fecha: obtenerFechaActualOperacion(),
     }
   },
   beforeMount() {
@@ -181,10 +209,9 @@ export default {
     }
   },
   methods: {
-    irPasarAsistencia({ clavemat }) {
-      loading(true, 'Cargando ...');
-      const url = "/docente/pasarAsistencias/" + clavemat;
-      this.$inertia.get(url);
+    abrirModalConfirmacion(cargaAcademica) {
+      this.cargaAcademica = cargaAcademica;
+      this.mostrarModalConfirmar = true;
     },
     showNotify (message, tipo) {
       return notify(message, tipo);
@@ -195,7 +222,23 @@ export default {
         const currentRoute = window.location.href;
         this.$inertia.get(currentRoute, this.filtros);
       }, 300);
-    }
+    },
+    verReporte() {
+      try {
+        this.validarFechas();
+      } catch (error) {
+        return notify(error, 'error');
+      }
+    },
+    validarFechas() {
+      if (!this.fecha) {
+        throw ('Debe introducir la fecha de asistencia');
+      }
+      const resValidacionFecha = esFechaValida(this.fecha);
+      if (resValidacionFecha.status  >= 300) {
+        throw (resValidacionFecha.mensaje);
+      }
+    },
   }
 };
 </script>

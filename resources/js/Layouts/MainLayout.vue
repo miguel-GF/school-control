@@ -65,6 +65,7 @@ const opcionesAlumnos = ref([
 ]);
 const opcionesDocentes = ref([
 	{ label: "Cargas Académicas", tag: "cargasAcademicas", icon: "las la-calendar-alt" },
+	{ label: "Reporte de Asistencias", tag: "asistenciasCargasAcademicas", icon: "las la-list-alt" },
 ]);
 const opcionesConfiguracion = ref([
 	{ label: "Cerrar Sesión", tag: "cerrarSesion", icon: "las la-sign-out-alt" },

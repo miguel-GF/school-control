@@ -39,6 +39,10 @@ export default {
           url = "/docente/cargasAcademicas";
           break;
 
+        case 'asistenciasCargasAcademicas':
+          url = "/docente/asistenciasCargasAcademicas";
+          break;
+
         default:
           url = "";
           break;
