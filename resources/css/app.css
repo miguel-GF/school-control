@@ -2,6 +2,10 @@
   width: 250px;
 }
 
+.w700-i {
+  width: 700px !important;
+}
+
 /* CLASE PARA EL LOADER GLOBAL */
 .class-loading {
   font-size: 20px;
