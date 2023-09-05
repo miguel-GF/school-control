@@ -16,6 +16,7 @@ Route::prefix('docente')->middleware('docente')->group(function () {
   Route::get('dashboard', [ViewController::class, 'docenteDashboardView'])->name('docente.dashboard');
   Route::get('cargasAcademicas', [DocenteController::class, 'docenteCargasAcademicasView'])->name('docente.cargas.academicas');
   Route::get('asistenciasCargasAcademicas', [DocenteController::class, 'docenteAsistenciasCargasAcademicasView'])->name('docente.asistencias.cargas.academicas');
+  Route::post('reporteAsistencias', [DocenteController::class, 'reporteAsistenciasView'])->name('docente.reporte.asistencias');
   Route::get('pasarAsistencias/{claveMateria}', [DocenteController::class, 'docentePasarAsistenciasCargasAcademicasView'])->name('docente.pasar.asistencias');
   Route::post('pasarAsistencias', [DocenteController::class, 'pasarAsistencias']);
 });

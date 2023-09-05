@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Repos\Data\AsistenciaRepoData;
 use App\Services\Actions\DocenteServiceAction;
 use App\Services\Data\DocenteServiceData;
 use App\Utils;
@@ -53,6 +54,26 @@ class DocenteController extends Controller
 		
 		} catch (\Throwable $th) {
 			Log::error('Error en docente asistencias cargas academicas view' . $th);
+			throw $th;
+		}
+	}
+
+	public function reporteAsistenciasView(Request $request)
+	{
+		try {
+			$user = Utils::getUser();
+			$datos = $request->all();
+			$datos['idProf'] = $user->idusuarios;
+			$asistencias = AsistenciaRepoData::obtenerReporteAsistencias($datos);
+			return Inertia::render('Docentes/DocenteAsistenciasReporte', [
+				'asistencias' => $asistencias,
+				'usuario' => $user,
+				'fecha' => $datos['fecha'],
+				'datos' => $datos['periodo'] . " " . $datos['semestre'] ."° ". $datos['grupo'] . " " . $datos['materia'] . " - " . $datos['licenciatura']
+			]);
+		
+		} catch (\Throwable $th) {
+			Log::error('Error en reporte asistencias view' . $th);
 			throw $th;
 		}
 	}

@@ -12,22 +12,6 @@
         <template v-slot:top-left>
           <div class="row">
             <div class="text-h6 q-pr-md q-my-auto">Generar Reporte de Cargas Académicas</div>
-            <div class="w250">
-              <q-select 
-                :options="periodos"
-                option-label="periodo"
-                option-value="periodo"
-                outlined dense
-                emit-value
-                v-model="filtros.periodo"
-                clearable
-                @update:modelValue="filtrarCargas"
-              >
-                <template v-slot:selected v-if="!filtros.periodo">
-                  Todos los periodos
-                </template>
-              </q-select>
-            </div> 
           </div>
         </template>
         <template v-slot:top-right>
@@ -73,6 +57,7 @@
           <q-date
             v-model="fecha"
             landscape
+            :options="optionsFn"
             style="width: 100% !important"
           />
         </div>
@@ -88,16 +73,13 @@ import { notify } from "../../Utils/notify.js";
 import { obtenerFechaActualOperacion, esFechaValida } from '../../Utils/date';
 export default {
   name: "DocenteAsistenciasCargasAcademicas",
-  props: ["cargasAcademicas", "periodos", "usuario", "filtrosRes", "status", "mensaje"],
+  props: ["cargasAcademicas", "usuario", "filtrosRes", "status", "mensaje"],
   components: { MainLayout },
   data() {
     return {
       mostrarModalConfirmar: false,
       cargaAcademica: {},
       filter: "",
-      filtros: {
-        periodo: ""
-      },
       columns: [
         {
           name: 'semestre',
@@ -194,10 +176,10 @@ export default {
         },
       ],
       fecha: obtenerFechaActualOperacion(),
+      optionsFn (date) {
+        return date <= obtenerFechaActualOperacion()
+      },
     }
-  },
-  beforeMount() {
-    this.filtros.periodo = this.filtrosRes['periodo'] ?? "";
   },
   created() {
     loading(false);
@@ -226,7 +208,20 @@ export default {
     verReporte() {
       try {
         this.validarFechas();
+        loading(true);
+        console.log('lllego');
+        const params = {
+          fecha: this.fecha,
+          semestre: this.cargaAcademica.semestre,
+          grupo: this.cargaAcademica.grupo,
+          materia: this.cargaAcademica.materia,
+          periodo: this.cargaAcademica.periodo,
+          licenciatura: this.cargaAcademica.licenciatura,
+        }
+        console.log(params);
+        this.$inertia.post("/docente/reporteAsistencias", params)
       } catch (error) {
+        loading(false);
         return notify(error, 'error');
       }
     },
