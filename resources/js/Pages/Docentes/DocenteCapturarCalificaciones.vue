@@ -1,115 +1,123 @@
 <template>
   <MainLayout>
     <div class="q-pa-md">
-      <q-table
-        :rows="calificaciones"
-        :columns="columns"
-        :rows-per-page-options="[10]"
-        :filter="filter"
-        class="tabla-listado striped-table"
-        row-key="numestudiante"
-      >
-        <template v-slot:top>
-          <div class="row col-12">
-            <div class="col-sm-6 col-md">
-              <div class="text-bold">Capturar Calificaciones - {{ obtenerPeriodo }}</div>
-              <div class="text-bold">{{ obtenerSemestreGrupo }}</div>
+      <q-form ref="form" @submit.prevent="confirmarCaptura()">
+        <input ref="inputSubmit" hidden type="submit">
+        <q-table
+          :rows="calificaciones"
+          :columns="columns"
+          :rows-per-page-options="[10]"
+          :filter="filter"
+          class="tabla-listado striped-table"
+          row-key="numestudiante"
+        >
+          <template v-slot:top>
+            <div class="row col-12">
+              <div class="col-sm-6 col-md">
+                <div class="text-bold">Capturar Calificaciones - {{ obtenerPeriodo }}</div>
+                <div class="text-bold">{{ obtenerSemestreGrupo }}</div>
+              </div>
+              <div class="col-sm-6 col-md-4 q-my-auto ellipsis-2-lines text-left">
+                {{ obtenerLicenciaturaMateria }}
+              </div>
+              <div class="col-sm-4 col-md-3 q-pl-md">
+                <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
+                  <template v-slot:append>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
+              </div>
+              <div class="col-sm-4 col-md-1 text-right">
+                <q-btn dense color="primary" flat round icon="save" @click="$refs.inputSubmit.click()">
+                  <q-tooltip anchor="bottom left">
+                    Guardar Calificaciones
+                  </q-tooltip>
+                </q-btn>
+              </div>
             </div>
-            <div class="col-sm-6 col-md-4 q-my-auto ellipsis-2-lines text-left">
-              {{ obtenerLicenciaturaMateria }}
-            </div>
-            <div class="col-sm-4 col-md-3 q-pl-md">
-              <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
-                <template v-slot:append>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-            </div>
-            <div class="col-sm-4 col-md-1 text-right">
-              <q-btn dense color="primary" flat round icon="save" @click="confirmarCaptura()">
-                <q-tooltip anchor="bottom left">
-                  Guardar Calificaciones
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </div>
-        </template>
-        <template v-slot:body-cell-primerParcial="props">
-          <q-td :props="props">
-            <q-input
-              max="10"
-              min="0"
-              v-model.number="props.row.primerparcial"
-              type="number"
-              step="any"
-              id="primerParcial"
-              dense
-              outlined
-              placeholder=""
-            />
-          </q-td>
-        </template>
-        <template v-slot:body-cell-segundoParcial="props">
-          <q-td :props="props">
-            <q-input
-              max="10"
-              min="0"
-              v-model.number="props.row.segundoparcial"
-              type="number"
-              step="any"
-              id="segundoParcial"
-              dense
-              outlined
-              placeholder=""
-            />
-          </q-td>
-        </template>
-        <template v-slot:body-cell-ordinario="props">
-          <q-td :props="props">
-            <q-input
-              max="10"
-              min="0"
-              v-model.number="props.row.ordinario"
-              type="number"
-              step="any"
-              id="ordinario"
-              dense
-              outlined
-              placeholder=""
-            />
-          </q-td>
-        </template>
-        <template v-slot:body-cell-extraordinario="props">
-          <q-td :props="props">
-            <q-input
-              max="10"
-              min="0"
-              v-model.number="props.row.extraordinario"
-              type="number"
-              step="any"
-              id="extraordinario"
-              dense
-              outlined
-              placeholder=""
-            />
-          </q-td>
-        </template>
-        <template v-slot:body-cell-final="props">
-          <q-td :props="props">
-            <q-input
-              max="10"
-              min="0"
-              v-model.number="props.row.final"
-              type="number"
-              step="any"
-              id="final"
-              dense
-              outlined
-              placeholder=""
-            />
-          </q-td>
-        </template>
-      </q-table>
+          </template>
+          <template v-slot:body-cell-primerParcial="props">
+            <q-td :props="props">
+              <q-input
+                max="10"
+                min="0"
+                v-model.number="props.row.primerparcial"
+                type="number"
+                step="any"
+                id="primerParcial"
+                dense
+                outlined
+                placeholder=""
+                :rules="[val => validarDatoCalificacion(val)]"
+              />
+            </q-td>
+          </template>
+          <template v-slot:body-cell-segundoParcial="props">
+            <q-td :props="props">
+              <q-input
+                max="10"
+                min="0"
+                v-model.number="props.row.segundoparcial"
+                type="number"
+                step="any"
+                id="segundoParcial"
+                dense
+                outlined
+                placeholder=""
+                :rules="[val => validarDatoCalificacion(val)]"
+              />
+            </q-td>
+          </template>
+          <template v-slot:body-cell-ordinario="props">
+            <q-td :props="props">
+              <q-input
+                max="10"
+                min="0"
+                v-model.number="props.row.ordinario"
+                type="number"
+                step="any"
+                id="ordinario"
+                dense
+                outlined
+                placeholder=""
+                :rules="[val => validarDatoCalificacion(val)]"
+              />
+            </q-td>
+          </template>
+          <template v-slot:body-cell-extraordinario="props">
+            <q-td :props="props">
+              <q-input
+                max="10"
+                min="0"
+                v-model.number="props.row.extraordinario"
+                type="number"
+                step="any"
+                id="extraordinario"
+                dense
+                outlined
+                placeholder=""
+                :rules="[val => validarDatoCalificacion(val)]"
+              />
+            </q-td>
+          </template>
+          <template v-slot:body-cell-final="props">
+            <q-td :props="props">
+              <q-input
+                max="10"
+                min="0"
+                v-model.number="props.row.final"
+                type="number"
+                step="any"
+                id="final"
+                dense
+                outlined
+                placeholder=""
+                :rules="[val => validarDatoCalificacion(val)]"
+              />
+            </q-td>
+          </template>
+        </q-table>
+      </q-form>
     </div>
     <!-- MODALES -->
     <!-- DIALOGO DE CONFIRMACION -->
@@ -284,6 +292,17 @@ export default {
       this.mostrarModalExito = false;
       loading(true);
       this.$inertia.get('/docente/cargasAcademicas');
+    },
+    validarDatoCalificacion(val) {
+      if (val != "") {
+        if (Number(val) > 10) {
+          return "No puede ser mayor a 10";
+        }
+        if (Number(val) < 0) {
+          return "No puede ser menor a 0";
+        }
+      }
+      return true;
     },
   }
 };
