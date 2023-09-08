@@ -39,16 +39,21 @@
         </template>
         <template v-slot:body-cell-materia="props">
           <q-td :props="props">
-            <div class="ellipsis w250">
+            <div class="ellipsis w225">
               {{ props.value || '--' }}
             </div>
           </q-td>
         </template>
-        <template v-slot:body-cell-asistencia="props">
+        <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn dense color="primary" flat round icon="check" @click="irPasarAsistencia(props.row)">
-              <q-tooltip>
+              <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">
                 Pasar Asistencia
+              </q-tooltip>
+            </q-btn>
+            <q-btn dense color="primary" flat round icon="la la-pen-fancy" @click="irCapturarCalificacion(props.row)">
+              <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">
+                Capturar Calificaciones
               </q-tooltip>
             </q-btn>
           </q-td>
@@ -161,7 +166,7 @@ export default {
           sortable: false
         },
         {
-          name: 'asistencia',
+          name: 'opciones',
           align: 'center',
           sortable: false
         },
@@ -184,6 +189,15 @@ export default {
     irPasarAsistencia({ clavemat }) {
       loading(true, 'Cargando ...');
       const url = "/docente/pasarAsistencias/" + clavemat;
+      this.$inertia.get(url);
+    },
+    irCapturarCalificacion(row) {
+      console.log(row);
+      const { idcargaacademica } = row;
+      loading(true, 'Cargando ...');
+
+      const url = "/docente/capturarCalificaciones/" + idcargaacademica;
+      console.log(url);
       this.$inertia.get(url);
     },
     showNotify (message, tipo) {

@@ -22,4 +22,22 @@ class DocenteRepoAction
       throw $th;
     }
   }
+
+  /**
+   * Método que ejecuta un update a calificaciones por id principal
+   *
+   * @param  mixed $update
+   * @param  mixed $idCalificacion
+   * @return void
+   */
+  public static function actualizarCalificacion(array $update, $idCalificacion)
+  {
+    try {
+      DB::table('calificaciones')
+        ->where('idcalificaciones', $idCalificacion)
+        ->update($update);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
 }

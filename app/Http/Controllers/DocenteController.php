@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants;
+use App\OrderConstants;
 use App\Repos\Data\AsistenciaRepoData;
 use App\Services\Actions\DocenteServiceAction;
+use App\Services\Data\CalificacionServiceData;
+use App\Services\Data\CargaAcademicaServiceData;
 use App\Services\Data\DocenteServiceData;
 use App\Utils;
 use Illuminate\Http\Request;
@@ -97,31 +101,92 @@ class DocenteController extends Controller
 	}
 
 	public function pasarAsistencias(Request $request)
-    {
-			$request->validate([
-				'fecha' => 'required|date',
-				'licenciatura' => 'required',
-				'semestre' => 'required',
-				'grupo' => 'required',
-				'claveMateria' => 'required',
-				'alumnos' => 'required',
-				'periodo' => 'required',
-			]);
+	{
+		$request->validate([
+			'fecha' => 'required|date',
+			'licenciatura' => 'required',
+			'semestre' => 'required',
+			'grupo' => 'required',
+			'claveMateria' => 'required',
+			'alumnos' => 'required',
+			'periodo' => 'required',
+		]);
 
-			$datos = $request->all();
+		$datos = $request->all();
 
-			DocenteServiceAction::pasarAsistencias($datos);
+		DocenteServiceAction::pasarAsistencias($datos);
 
-			$user = Utils::getUser();
-			$cargasAcademicasAlumnos = DocenteServiceData::obtenerAlumnosPorCargaAcademica([
-				'idProf' => $user->idusuarios,
-				'claveMateria' => $datos['claveMateria']
-			]);
-			return Inertia::render('Docentes/DocentePasarAsistencia', [
-				'alumnos' => $cargasAcademicasAlumnos,
-				'usuario' => $user,
-				'status' => 200,
-				'mensaje' => 'Asistencias agredadas correctamente',
-			]);
-    }
+		$user = Utils::getUser();
+		$cargasAcademicasAlumnos = DocenteServiceData::obtenerAlumnosPorCargaAcademica([
+			'idProf' => $user->idusuarios,
+			'claveMateria' => $datos['claveMateria']
+		]);
+		return Inertia::render('Docentes/DocentePasarAsistencia', [
+			'alumnos' => $cargasAcademicasAlumnos,
+			'usuario' => $user,
+			'status' => 200,
+			'mensaje' => 'Asistencias agredadas correctamente',
+		]);
+	}
+
+	/**
+	 * docenteCapturarCalificacionesView
+	 *
+	 * @param  mixed $request
+	 */
+	public function docenteCapturarCalificacionesView($idCargaAcademica)
+	{
+		$user = Utils::getUser();
+		$cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
+			'idCargaAcademica' => $idCargaAcademica
+		]);
+		$calificaciones = CalificacionServiceData::listarCalificaciones([
+			'claveMateria' => $cargasAcademicas[0]->clavemat,
+			'licenciatura' => $cargasAcademicas[0]->licenciatura,
+			'periodo' => $cargasAcademicas[0]->periodo,
+			'semestre' => $cargasAcademicas[0]->semestre,
+			'grupo' => $cargasAcademicas[0]->grupo,
+			'status' => Constants::ACTIVO_STATUS,
+			'ordenar' => OrderConstants::NOMBRE_ASC,
+		]);
+		return Inertia::render('Docentes/DocenteCapturarCalificaciones', [
+			'calificaciones' => $calificaciones,
+			'usuario' => $user,
+			'idCargaAcademica' => $idCargaAcademica,
+		]);
+	}
+
+	public function guardarCalificaciones(Request $request)
+	{
+		$request->validate([
+			'calificaciones' => 'required',
+			'idCargaAcademica' => 'required',
+			'fecha' => 'nullable',
+		]);
+
+		$datos = $request->all();
+
+		DocenteServiceAction::guardarCalificaciones($datos);
+
+		$user = Utils::getUser();
+		$cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
+			'idCargaAcademica' => $datos['idCargaAcademica']
+		]);
+		$calificaciones = CalificacionServiceData::listarCalificaciones([
+			'claveMateria' => $cargasAcademicas[0]->clavemat,
+			'licenciatura' => $cargasAcademicas[0]->licenciatura,
+			'periodo' => $cargasAcademicas[0]->periodo,
+			'semestre' => $cargasAcademicas[0]->semestre,
+			'grupo' => $cargasAcademicas[0]->grupo,
+			'status' => Constants::ACTIVO_STATUS,
+			'ordenar' => OrderConstants::NOMBRE_ASC,
+		]);
+		return Inertia::render('Docentes/DocenteCapturarCalificaciones', [
+			'calificaciones' => $calificaciones,
+			'usuario' => $user,
+			'idCargaAcademica' => $datos['idCargaAcademica'],
+			'status' => 200,
+			'mensaje' => 'Calificaciones guardadas correctamente',
+		]);
+	}
 }

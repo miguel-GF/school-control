@@ -9,6 +9,17 @@ use stdClass;
 class DocenteServiceData
 {
   /**
+   * listarCargasAcademicas
+   *
+   * @param  mixed $filtros [idCargaAcademica?]
+   * @return array
+   */
+  public static function listarCargasAcademicas(array $filtros)
+  {
+    return CargaAcademicaRepoData::listarCargasAcademicas($filtros);
+  }
+
+  /**
    * obtenerCalificacionesPorId
    *
    * @param  mixed $datos [idProf, periodo?]
@@ -18,7 +29,7 @@ class DocenteServiceData
   {
     $res = new stdClass();
     $res->periodos = CargaAcademicaRepoData::obtenerPeriodosCargasAcademicas();
-    $res->cargasAcademicas = DocenteRepoData::obtenerCargasAcademicasPorId($datos);
+    $res->cargasAcademicas = DocenteRepoData::obtenerCargasAcademicasPorIdDocente($datos);
     return $res;
   }
 
@@ -34,6 +45,18 @@ class DocenteServiceData
     foreach ($alumnos as $alumno) {
       $alumno->asistencia = false;
     }
+    return $alumnos;
+  }
+
+  /**
+   * obtenerAlumnosParaCalificacionPorMateria
+   *
+   * @param  mixed $datos [semestre, grupo, licenciatura, claveMateria]
+   * @return array
+   */
+  public static function obtenerAlumnosParaCalificacionPorMateria(array $datos)
+  {
+    $alumnos = DocenteRepoData::obtenerAlumnosParaCalificacionPorMateria($datos);
     return $alumnos;
   }
 }

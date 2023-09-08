@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 class DocenteServiceAction
 {
   /**
-   * loginDocente
+   * pasarAsistencias
    *
-   * @param  mixed $datos [correo, password]
+   * @param  mixed $datos [idProf, alumnos]
    * @return void
    */
   public static function pasarAsistencias(array $datos)
@@ -30,6 +30,30 @@ class DocenteServiceAction
         array_push($arrayInsert, $insert);
       }
       DocenteRepoAction::agregar($arrayInsert);
+
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollBack();
+      throw $th;
+    }
+  }
+
+  /**
+   * guardarCalificaciones
+   *
+   * @param  mixed $datos [califiaciones]
+   * @return void
+   */
+  public static function guardarCalificaciones(array $datos)
+  {
+    try {
+      DB::beginTransaction();
+
+      $calificaciones = json_decode($datos['calificaciones']);
+      foreach ($calificaciones as $calificacion) {
+        $update = DocenteBO::armarUpdateCalificacion($datos, $calificacion);
+        DocenteRepoAction::actualizarCalificacion($update, $calificacion->idcalificaciones);
+      }
 
       DB::commit();
     } catch (\Throwable $th) {

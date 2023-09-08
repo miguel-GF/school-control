@@ -30,4 +30,24 @@ class DocenteBO
 
     return $insert;
   }
+
+  /**
+   * armarUpdateCalificacion
+   *
+   * @param  mixed $datos
+   * @param  mixed $calificacion
+   * @return array
+   */
+  public static function armarUpdateCalificacion(array $datos, stdClass $calificacion): array
+  {
+    $update = [];
+    $update['primerparcial'] = $calificacion->primerparcial ?: null;
+    $update['segundoparcial'] = $calificacion->segundoparcial ?: null;
+    $update['ordinario'] = $calificacion->ordinario ?: null;
+    $update['extraordinario'] = $calificacion->extraordinario ?: null;
+    $update['final'] = $calificacion->final ?: null;
+    $update['fechacambio'] = !empty($datos['fecha']) ? $datos['fecha'] : null;
+
+    return $update;
+  }
 }

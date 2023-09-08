@@ -19,6 +19,8 @@ Route::prefix('docente')->middleware('docente')->group(function () {
   Route::post('reporteAsistencias', [DocenteController::class, 'reporteAsistenciasView'])->name('docente.reporte.asistencias');
   Route::get('pasarAsistencias/{claveMateria}', [DocenteController::class, 'docentePasarAsistenciasCargasAcademicasView'])->name('docente.pasar.asistencias');
   Route::post('pasarAsistencias', [DocenteController::class, 'pasarAsistencias']);
+  Route::get('capturarCalificaciones/{idCargaAcademica}', [DocenteController::class, 'docenteCapturarCalificacionesView'])->name('docente.capturar.calificaciones');
+  Route::post('guardarCalificaciones', [DocenteController::class, 'guardarCalificaciones']);
 });
 
 Route::prefix('alumno')->middleware('alumno')->group(function () {
