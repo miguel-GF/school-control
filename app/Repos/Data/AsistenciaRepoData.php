@@ -15,7 +15,7 @@ class AsistenciaRepoData
    */
   public static function obtenerReporteAsistencias(array $datos)
   {
-    $query = DB::table('asistencias as as')
+    $query = DB::table('Asistencias as as')
       ->select(
         'as.idAsistencias',
         'as.fecha',

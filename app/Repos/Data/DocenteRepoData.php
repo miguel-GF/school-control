@@ -82,7 +82,7 @@ class DocenteRepoData
    */
   public static function obtenerAlumnosParaCalificacionPorMateria(array $datos)
   {
-    $query = DB::table('calificaciones as c')
+    $query = DB::table('Calificaciones as c')
       ->select(
         'c.idcalificaciones',
         'c.periodo',

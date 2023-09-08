@@ -33,7 +33,7 @@ class DocenteRepoAction
   public static function actualizarCalificacion(array $update, $idCalificacion)
   {
     try {
-      DB::table('calificaciones')
+      DB::table('Calificaciones')
         ->where('idcalificaciones', $idCalificacion)
         ->update($update);
     } catch (QueryException $th) {
