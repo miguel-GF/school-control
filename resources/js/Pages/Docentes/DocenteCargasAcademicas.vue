@@ -186,9 +186,9 @@ export default {
     }
   },
   methods: {
-    irPasarAsistencia({ clavemat }) {
+    irPasarAsistencia({ idcargaacademica }) {
       loading(true, 'Cargando ...');
-      const url = "/docente/pasarAsistencias/" + clavemat;
+      const url = "/docente/pasarAsistencias/" + idcargaacademica;
       this.$inertia.get(url);
     },
     irCapturarCalificacion(row) {

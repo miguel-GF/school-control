@@ -83,7 +83,7 @@ import { loading } from '../../Utils/loading';
 import { obtenerFechaActualCompletaMostrar, obtenerFechaActualOperacion, esFechaValida } from '../../Utils/date';
 import { notify } from '../../Utils/notify';
 export default {
-  props: ["alumnos", "status", "mensaje"],
+  props: ["alumnos", "status", "mensaje", "idCargaAcademica"],
   components: { MainLayout },
   data() {
     return {
@@ -124,6 +124,8 @@ export default {
     loading(false);
     if (this.status == 200) {
       this.mostrarModalExito = true;
+    } else {
+      return notify(this.mensaje, 'error');
     }
   },
   computed: {
@@ -163,7 +165,7 @@ export default {
       const alumnosCantidad = this.alumnos.length;
       let mensajes = [];
       mensajes[0] = `Guardará asistencias con la siguiente información:<br>`;
-      mensajes[1] = `Fecha: ${obtenerFechaActualCompletaMostrar()}`;
+      mensajes[1] = `Fecha: ${this.fecha}`;
       mensajes[2] = `Número de alumnos: ${alumnosCantidad}`;
       mensajes[3] = `Número de alumnos que asistieron: ${alumnosConAsistenciaCantidad}`;
       mensajes[4] = `Alumnos con asistencia: ${alumnosConAsistenciaCantidad} de ${alumnosCantidad}`;
@@ -197,13 +199,13 @@ export default {
           alumnosCopia[index].asistencia = true;
         }
       });
-      const { semestre, grupo, licenciatura, materia, clavemat, periodo } = this.alumnos[0];
+      const { semestre, grupo, licenciatura, materia, periodo } = this.alumnos[0];
       const form = {
         fecha: this.fecha,
         licenciatura,
         semestre,
         grupo,
-        claveMateria: clavemat,
+        idCargaAcademica: this.idCargaAcademica,
         alumnos: JSON.stringify(alumnosCopia),
         periodo,
         materia,

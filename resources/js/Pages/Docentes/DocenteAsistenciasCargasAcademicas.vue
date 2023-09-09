@@ -209,7 +209,6 @@ export default {
       try {
         this.validarFechas();
         loading(true);
-        console.log('lllego');
         const params = {
           fecha: this.fecha,
           semestre: this.cargaAcademica.semestre,
@@ -218,7 +217,6 @@ export default {
           periodo: this.cargaAcademica.periodo,
           licenciatura: this.cargaAcademica.licenciatura,
         }
-        console.log(params);
         this.$inertia.post("/docente/reporteAsistencias", params)
       } catch (error) {
         loading(false);

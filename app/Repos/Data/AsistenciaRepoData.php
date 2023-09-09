@@ -2,8 +2,8 @@
 
 namespace App\Repos\Data;
 
+use App\Repos\RH\AsistenciaRH;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class AsistenciaRepoData
 {
@@ -44,8 +44,33 @@ class AsistenciaRepoData
       ->where('as.licenciatura', $datos['licenciatura'])
       ->orderBy('as.nombre');
 
-    Log::info($query->toSql());
-    Log::info($query->getBindings());
+    return $query->get()->toArray();
+  }
+
+  /**
+   * listarAsistencias
+   *
+   * @param  mixed $filtros
+   * @return array
+   */
+  public static function listarAsistencias(array $filtros)
+  {
+    $query = DB::table('Asistencias as a')
+      ->select(
+        'a.idAsistencias',
+        'a.fecha',
+        'a.plan',
+        'a.licenciatura',
+        'a.sem',
+        'a.grupo',
+        'a.materia',
+        'a.numestudiante',
+        'a.nombre as alumno_nombre',
+        'a.asistencia',
+        'a.periodo'
+      );
+
+    AsistenciaRH::obtenerFiltrosListar($query, $filtros);
 
     return $query->get()->toArray();
   }

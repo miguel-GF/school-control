@@ -87,46 +87,80 @@ class DocenteController extends Controller
 	 *
 	 * @param  mixed $request
 	 */
-	public function docentePasarAsistenciasCargasAcademicasView($claveMateria)
+	public function docentePasarAsistenciasCargasAcademicasView($idCargaAcademica)
 	{
 		$user = Utils::getUser();
-		$cargasAcademicasAlumnos = DocenteServiceData::obtenerAlumnosPorCargaAcademica([
-			'idProf' => $user->idusuarios,
-			'claveMateria' => $claveMateria
+		$cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
+			'idCargaAcademica' => $idCargaAcademica
 		]);
+		$calificaciones = [];
+		if (!empty($cargasAcademicas)) {
+			$calificaciones = CalificacionServiceData::listarCalificaciones([
+				'claveMateria' => $cargasAcademicas[0]->clavemat,
+				'licenciatura' => $cargasAcademicas[0]->licenciatura,
+				'periodo' => $cargasAcademicas[0]->periodo,
+				'semestre' => $cargasAcademicas[0]->semestre,
+				'grupo' => $cargasAcademicas[0]->grupo,
+				'status' => Constants::ACTIVO_STATUS,
+				'ordenar' => OrderConstants::NOMBRE_ASC,
+			]);
+		}
 		return Inertia::render('Docentes/DocentePasarAsistencia', [
-			'alumnos' => $cargasAcademicasAlumnos,
+			'alumnos' => $calificaciones,
 			'usuario' => $user,
+			'idCargaAcademica' => $idCargaAcademica
 		]);
 	}
 
 	public function pasarAsistencias(Request $request)
 	{
-		$request->validate([
-			'fecha' => 'required|date',
-			'licenciatura' => 'required',
-			'semestre' => 'required',
-			'grupo' => 'required',
-			'claveMateria' => 'required',
-			'alumnos' => 'required',
-			'periodo' => 'required',
-		]);
+		try {
+			$request->validate([
+				'fecha' => 'required|date',
+				'licenciatura' => 'required',
+				'semestre' => 'required',
+				'grupo' => 'required',
+				'alumnos' => 'required',
+				'periodo' => 'required',
+			]);
 
-		$datos = $request->all();
+			$datos = $request->all();
 
-		DocenteServiceAction::pasarAsistencias($datos);
+			$res = DocenteServiceAction::pasarAsistencias($datos);
 
-		$user = Utils::getUser();
-		$cargasAcademicasAlumnos = DocenteServiceData::obtenerAlumnosPorCargaAcademica([
-			'idProf' => $user->idusuarios,
-			'claveMateria' => $datos['claveMateria']
-		]);
-		return Inertia::render('Docentes/DocentePasarAsistencia', [
-			'alumnos' => $cargasAcademicasAlumnos,
-			'usuario' => $user,
-			'status' => 200,
-			'mensaje' => 'Asistencias agredadas correctamente',
-		]);
+			$user = Utils::getUser();
+			$cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
+				'idCargaAcademica' => $datos['idCargaAcademica']
+			]);
+			$calificaciones = [];
+			if (!empty($cargasAcademicas)) {
+				$calificaciones = CalificacionServiceData::listarCalificaciones([
+					'claveMateria' => $cargasAcademicas[0]->clavemat,
+					'licenciatura' => $cargasAcademicas[0]->licenciatura,
+					'periodo' => $cargasAcademicas[0]->periodo,
+					'semestre' => $cargasAcademicas[0]->semestre,
+					'grupo' => $cargasAcademicas[0]->grupo,
+					'status' => Constants::ACTIVO_STATUS,
+					'ordenar' => OrderConstants::NOMBRE_ASC,
+				]);
+			}
+			Log::info('llego al fin');
+			return Inertia::render('Docentes/DocentePasarAsistencia', [
+				'alumnos' => $calificaciones,
+				'usuario' => $user,
+				'status' => $res->status,
+				'mensaje' => $res->mensaje,
+				'idCargaAcademica' => $datos['idCargaAcademica'],
+			]);
+		} catch (\Throwable $th) {
+			Log::error('Error en pasar asistencias ' . $th);
+			return Inertia::render('Docentes/DocentePasarAsistencia', [
+				'alumnos' => $calificaciones ?? [],
+				'status' => 300,
+				'mensaje' => 'Ocurrio un error al guardar asistencias',
+				'idCargaAcademica' => $datos['idCargaAcademica'],
+			]);
+		}
 	}
 
 	/**

@@ -27,6 +27,18 @@
             </template>
           </q-input>
         </template>
+        <template v-slot:body-cell-asistencia="props">
+          <q-td :props="props">
+            <div class="row">
+              <div class="col-1">
+                {{ props.value || '--' }}
+              </div>
+              <div>
+                <q-icon :name="props.value == 'No' ? 'las la-times' : 'las la-check'" />
+              </div>
+            </div>
+          </q-td>
+        </template>
       </q-table>
     </div>
   </MainLayout>
