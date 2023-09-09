@@ -144,7 +144,6 @@ class DocenteController extends Controller
 					'ordenar' => OrderConstants::NOMBRE_ASC,
 				]);
 			}
-			Log::info('llego al fin');
 			return Inertia::render('Docentes/DocentePasarAsistencia', [
 				'alumnos' => $calificaciones,
 				'usuario' => $user,

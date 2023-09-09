@@ -217,7 +217,7 @@ export default {
           periodo: this.cargaAcademica.periodo,
           licenciatura: this.cargaAcademica.licenciatura,
         }
-        this.$inertia.post("/docente/reporteAsistencias", params)
+        this.$inertia.get("/docente/reporteAsistencias", params)
       } catch (error) {
         loading(false);
         return notify(error, 'error');
