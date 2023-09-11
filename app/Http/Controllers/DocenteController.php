@@ -72,8 +72,8 @@ class DocenteController extends Controller
 			return Inertia::render('Docentes/DocenteAsistenciasReporte', [
 				'asistencias' => $asistencias,
 				'usuario' => $user,
-				'fecha' => $datos['fecha'],
-				'datos' => $datos['periodo'] . " " . $datos['semestre'] ."° ". $datos['grupo'] . " " . $datos['materia'] . " - " . $datos['licenciatura']
+				'fecha' => "Del " . $datos['fechaInicio'] . " al " . $datos['fechaFin'],
+				'datos' => $datos,
 			]);
 		
 		} catch (\Throwable $th) {

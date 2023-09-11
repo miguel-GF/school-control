@@ -17,31 +17,19 @@ class AsistenciaRepoData
   {
     $query = DB::table('Asistencias as as')
       ->select(
-        'as.idAsistencias',
-        'as.fecha',
-        'as.licenciatura',
-        'as.sem',
-        'as.grupo',
-        'as.materia',
-        'as.periodo',
-        'as.cvedoc',
         'as.numestudiante',
         'as.nombre',
-        'as.asistencia',
-        DB::raw("
-          CASE
-            WHEN as.asistencia THEN 'Si'
-            ELSE 'No'
-          END as asistencia_nombre
-        ")
+        DB::raw("SUM(as.asistencia) as cantidad_asistencias")
       )
-      ->where('as.fecha', $datos['fecha'])
+      ->where('as.fecha', '>=', $datos['fechaInicio'])
+      ->where('as.fecha', '<=', $datos['fechaFin'])
       ->where('as.cvedoc', $datos['idProf'])
       ->where('as.sem', $datos['semestre'])
       ->where('as.grupo', $datos['grupo'])
       ->where('as.materia', $datos['materia'])
       ->where('as.periodo', $datos['periodo'])
       ->where('as.licenciatura', $datos['licenciatura'])
+      ->groupBy('as.numestudiante', 'as.nombre')
       ->orderBy('as.nombre');
 
     return $query->get()->toArray();

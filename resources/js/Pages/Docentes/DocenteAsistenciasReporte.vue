@@ -12,7 +12,12 @@
         <template v-slot:top-left>
           <div class="row">
             <div class="text-h6 q-pr-md q-my-auto">Reporte de Asistencias<br> {{ fecha || '--' }}</div>
-            <div class="q-pr-md ellipsis-2-lines q-pt-sm">{{ datos || '--' }}</div>
+            <div class="q-pr-md q-pt-sm">
+              <div> {{ `${datos['periodo'] || '--'} | ${datos['semestre'] || '--'}° ${datos['grupo'] || '--'}` }}</div>
+              <div> {{ `Licenciatura: ${datos['licenciatura']}` }}</div>
+              <div> {{ `Materia: ${datos['materia']}` }}</div>
+
+            </div>
           </div>
         </template>
         <template v-slot:top-right>
@@ -28,14 +33,9 @@
           </q-input>
         </template>
         <template v-slot:body-cell-asistencia="props">
-          <q-td :props="props">
-            <div class="row">
-              <div class="col-1">
-                {{ props.value || '--' }}
-              </div>
-              <div>
-                <q-icon :name="props.value == 'No' ? 'las la-times' : 'las la-check'" />
-              </div>
+          <q-td :props="props" class="text-center">
+            <div class="text-center q-pr-">
+              {{ props.value || '--' }}
             </div>
           </q-td>
         </template>
@@ -48,10 +48,9 @@
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
 import { notify } from "../../Utils/notify.js";
-import { obtenerFechaActualOperacion, esFechaValida } from '../../Utils/date';
 export default {
   name: "DocenteAsistenciasReporte",
-  props: ["asistencias", "usuario", "datos"],
+  props: ["asistencias", "usuario", "datos", "fecha"],
   components: { MainLayout },
   data() {
     return {
@@ -63,7 +62,8 @@ export default {
           align: 'left',
           field: row => row.numestudiante,
           format: val => val ?? '--',
-          sortable: true
+          sortable: true,
+          headerStyle: 'width: 20%',
         },
         {
           name: 'alumno',
@@ -71,21 +71,19 @@ export default {
           align: 'left',
           field: row => row.nombre,
           format: val => val ?? '--',
-          sortable: true
+          sortable: true,
+          headerStyle: 'width: 70%',
         },
         {
           name: 'asistencia',
-          label: 'Asistencia',
-          align: 'left',
-          field: row => row.asistencia_nombre,
+          label: 'Asistencias',
+          align: 'center',
+          field: row => row.cantidad_asistencias,
           format: val => val ?? '--',
-          sortable: true
+          sortable: true,
+          headerStyle: 'width: 10%',
         },
       ],
-      fecha: obtenerFechaActualOperacion(),
-      optionsFn (date) {
-        return date <= obtenerFechaActualOperacion()
-      },
     }
   },
   created() {
@@ -113,15 +111,6 @@ export default {
         this.validarFechas();
       } catch (error) {
         return notify(error, 'error');
-      }
-    },
-    validarFechas() {
-      if (!this.fecha) {
-        throw ('Debe introducir la fecha de asistencia');
-      }
-      const resValidacionFecha = esFechaValida(this.fecha);
-      if (resValidacionFecha.status  >= 300) {
-        throw (resValidacionFecha.mensaje);
       }
     },
     regresar() {

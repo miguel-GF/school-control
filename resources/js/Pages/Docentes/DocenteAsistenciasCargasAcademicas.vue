@@ -11,7 +11,59 @@
       >
         <template v-slot:top-left>
           <div class="row">
-            <div class="text-h6 q-pr-md q-my-auto">Generar Reporte de Cargas Académicas</div>
+            <div class="text-h6 q-pr-md q-my-auto">Reporte de Asistencias</div>
+            <div class="w250 q-pr-md">
+              <q-select 
+                :options="periodos"
+                option-label="periodo"
+                option-value="periodo"
+                outlined dense
+                emit-value
+                v-model="filtros.periodo"
+                clearable
+                @update:modelValue="filtrarCargas"
+              >
+                <template v-slot:selected v-if="!filtros.periodo">
+                  Todos los periodos
+                </template>
+              </q-select>
+            </div>
+            <!-- FECHA INICIO -->
+            <div class="text-left row q-pr-md">
+              <div class="q-my-auto q-pr-xs">Fecha del:</div>
+              <q-input class="col" readonly hide-bottom-space outlined dense
+                @click="$refs.iconoFechaInicio.$el.click()" v-model="fecha" mask="date" :rules="['date']">
+                <template v-slot:append>
+                  <q-icon name="event" ref="iconoFechaInicio" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="fecha" :options="val => optionsFechaInicio(val, fechaFin)">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+            <!-- FECHA FIN -->
+            <div class="text-left row">
+              <div class="q-my-auto q-pr-xs">al:</div>
+              <q-input class="col" readonly hide-bottom-space outlined dense
+                @click="$refs.iconoFechaFin.$el.click()" v-model="fechaFin" mask="date" :rules="['date']">
+                <template v-slot:append>
+                  <q-icon name="event" ref="iconoFechaFin" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="fechaFin" :options="val => optionsFechaFin(val, fecha)">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
           </div>
         </template>
         <template v-slot:top-right>
@@ -23,7 +75,7 @@
         </template>
         <template v-slot:body-cell-materia="props">
           <q-td :props="props">
-            <div class="ellipsis w250">
+            <div class="ellipsis w225">
               {{ props.value || '--' }}
             </div>
           </q-td>
@@ -44,22 +96,15 @@
     <the-dialog-confirm
       :mostrar="mostrarModalConfirmar"
       classes="w700-i"
-      titulo="Seleccionar Fecha del Reporte de Asistencia"
+      titulo="Confirmar Datos del Reporte de Asistencia"
       @cerrar="mostrarModalConfirmar = false"
       @aceptar="verReporte()"
     >
       <template #body>
         <div class="col-12 q-pa-sm">
           <div class="col-sm-6 col-md q-mb-md">
-            <div class="text-bold">{{ cargaAcademica.licenciatura }}</div>
-            <div class="text-bold">{{ `${cargaAcademica.periodo} | ${cargaAcademica.semestre || '--' }° ${cargaAcademica.grupo || '--'}` }}</div>
+            <q-banner rounded class="col-12 bg-orange-4" v-html="obtenerMensajeConfirmacion" />
           </div>
-          <q-date
-            v-model="fecha"
-            landscape
-            :options="optionsFn"
-            style="width: 100% !important"
-          />
         </div>
       </template>
     </the-dialog-confirm>
@@ -73,13 +118,28 @@ import { notify } from "../../Utils/notify.js";
 import { obtenerFechaActualOperacion, esFechaValida } from '../../Utils/date';
 export default {
   name: "DocenteAsistenciasCargasAcademicas",
-  props: ["cargasAcademicas", "usuario", "filtrosRes", "status", "mensaje"],
+  props: ["cargasAcademicas", "usuario", "filtrosRes", "status", "mensaje", "periodos"],
   components: { MainLayout },
+  computed: {
+    obtenerMensajeConfirmacion() {
+      let mensajes = [];
+      mensajes[0] = `Generará un reporte de asistencias con la siguiente información:<br>`;
+      mensajes[1] = `Licenciatura: ${this.cargaAcademica.licenciatura || '--'}`;
+      mensajes[2] = `Materia: ${this.cargaAcademica.materia || '--'}`;
+      mensajes[3] = `Periodo: ${this.cargaAcademica.periodo || '--'}`;
+      mensajes[4] = `Fecha inicial: ${this.fecha || '--'}`;
+      mensajes[5] = `Fecha final: ${this.fechaFin || '--'}`;
+      return mensajes.join('<br>');
+    },
+  },
   data() {
     return {
       mostrarModalConfirmar: false,
       cargaAcademica: {},
       filter: "",
+      filtros: {
+        periodo: ""
+      },
       columns: [
         {
           name: 'semestre',
@@ -117,7 +177,7 @@ export default {
           name: 'materia',
           label: 'Materia',
           align: 'left',
-          field: row => row.materia,
+          field: row => row.clavemat,
           format: val => val ?? '--',
           sortable: true,
         },
@@ -176,10 +236,18 @@ export default {
         },
       ],
       fecha: obtenerFechaActualOperacion(),
-      optionsFn (date) {
-        return date <= obtenerFechaActualOperacion()
+      fechaFin: obtenerFechaActualOperacion(),
+      fechaActual: obtenerFechaActualOperacion(),
+      optionsFechaInicio (date, dateFin) {
+        return date <= obtenerFechaActualOperacion() && date <= dateFin
+      },
+      optionsFechaFin (date, dateInicio) {
+        return date <= obtenerFechaActualOperacion() && date >= dateInicio
       },
     }
+  },
+  beforeMount() {
+    this.filtros.periodo = this.filtrosRes['periodo'] ?? "";
   },
   created() {
     loading(false);
@@ -192,8 +260,13 @@ export default {
   },
   methods: {
     abrirModalConfirmacion(cargaAcademica) {
-      this.cargaAcademica = cargaAcademica;
-      this.mostrarModalConfirmar = true;
+      try {
+        this.validarFechas();
+        this.cargaAcademica = cargaAcademica;
+        this.mostrarModalConfirmar = true;
+      } catch (error) {
+        return notify(error, 'error');
+      }
     },
     showNotify (message, tipo) {
       return notify(message, tipo);
@@ -207,10 +280,10 @@ export default {
     },
     verReporte() {
       try {
-        this.validarFechas();
         loading(true);
         const params = {
-          fecha: this.fecha,
+          fechaInicio: this.fecha,
+          fechaFin: this.fechaFin,
           semestre: this.cargaAcademica.semestre,
           grupo: this.cargaAcademica.grupo,
           materia: this.cargaAcademica.materia,
@@ -225,11 +298,18 @@ export default {
     },
     validarFechas() {
       if (!this.fecha) {
-        throw ('Debe introducir la fecha de asistencia');
+        throw ('Debe introducir la fecha inicial de asistencia');
       }
       const resValidacionFecha = esFechaValida(this.fecha);
       if (resValidacionFecha.status  >= 300) {
         throw (resValidacionFecha.mensaje);
+      }
+      if (!this.fechaFin) {
+        throw ('Debe introducir la fecha final de asistencia');
+      }
+      const resValidacionFechaFin = esFechaValida(this.fechaFin);
+      if (resValidacionFechaFin.status  >= 300) {
+        throw (resValidacionFechaFin.mensaje);
       }
     },
   }
