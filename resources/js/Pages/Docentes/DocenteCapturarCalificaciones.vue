@@ -39,6 +39,7 @@
           <template v-slot:body-cell-primerParcial="props">
             <q-td :props="props">
               <q-input
+                hide-bottom-space
                 max="10"
                 min="0"
                 v-model.number="props.row.primerparcial"
@@ -55,6 +56,7 @@
           <template v-slot:body-cell-segundoParcial="props">
             <q-td :props="props">
               <q-input
+                hide-bottom-space
                 max="10"
                 min="0"
                 v-model.number="props.row.segundoparcial"
@@ -71,6 +73,7 @@
           <template v-slot:body-cell-ordinario="props">
             <q-td :props="props">
               <q-input
+                hide-bottom-space
                 max="10"
                 min="0"
                 v-model.number="props.row.ordinario"
@@ -87,6 +90,7 @@
           <template v-slot:body-cell-extraordinario="props">
             <q-td :props="props">
               <q-input
+                hide-bottom-space
                 max="10"
                 min="0"
                 v-model.number="props.row.extraordinario"
@@ -103,6 +107,7 @@
           <template v-slot:body-cell-final="props">
             <q-td :props="props">
               <q-input
+                hide-bottom-space
                 max="10"
                 min="0"
                 v-model.number="props.row.final"

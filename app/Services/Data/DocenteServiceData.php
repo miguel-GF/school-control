@@ -28,7 +28,7 @@ class DocenteServiceData
   public static function obtenerDataCargasAcademicasPorId(array $datos)
   {
     $res = new stdClass();
-    $res->periodos = CargaAcademicaRepoData::obtenerPeriodosCargasAcademicas();
+    $res->periodos = PeriodoServiceData::listarPeriodos([]);
     $res->cargasAcademicas = DocenteRepoData::obtenerCargasAcademicasPorIdDocente($datos);
     return $res;
   }
