@@ -22,7 +22,7 @@ class DocenteController extends Controller
 			$user = Utils::getUser();
 			$datos = $request->all();
 			$res = DocenteServiceData::obtenerDataCargasAcademicasPorId([
-				'idProf' => $user->idusuarios,
+				'idProf' => $user->claveusuario,
 				'periodo' => $datos['periodo'] ?? "",
 			]);
 			$filtros['periodo'] = $datos['periodo'] ?? "";
@@ -45,7 +45,7 @@ class DocenteController extends Controller
 			$user = Utils::getUser();
 			$datos = $request->all();
 			$res = DocenteServiceData::obtenerDataCargasAcademicasPorId([
-				'idProf' => $user->idusuarios,
+				'idProf' => $user->claveusuario,
 				'periodo' => $datos['periodo'] ?? "",
 			]);
 			$filtros['periodo'] = $datos['periodo'] ?? "";
@@ -67,7 +67,7 @@ class DocenteController extends Controller
 		try {
 			$user = Utils::getUser();
 			$datos = $request->all();
-			$datos['idProf'] = $user->idusuarios;
+			$datos['idProf'] = $user->claveusuario;
 			$asistencias = AsistenciaRepoData::obtenerReporteAsistencias($datos);
 			return Inertia::render('Docentes/DocenteAsistenciasReporte', [
 				'asistencias' => $asistencias,

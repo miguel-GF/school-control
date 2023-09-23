@@ -46,7 +46,7 @@ class DocenteServiceAction
       }
 
       $user = Utils::getUser();
-      $datos['idProf'] = $user->idusuarios;
+      $datos['idProf'] = $user->claveusuario;
       $alumnos = json_decode($datos['alumnos']);
       $arrayInsert = [];
       foreach ($alumnos as $alumno) {
