@@ -177,7 +177,7 @@ export default {
           name: 'materia',
           label: 'Materia',
           align: 'left',
-          field: row => row.clavemat,
+          field: row => row.materia,
           format: val => val ?? '--',
           sortable: true,
         },
