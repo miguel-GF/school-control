@@ -3,7 +3,7 @@ import './bootstrap';
 import { createApp, h } from "vue";
 import { createInertiaApp } from "@inertiajs/inertia-vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-import { Quasar, Notify, Loading } from "quasar";
+import { Quasar, Notify, Loading } from "./Utils/quasar";
 import langEs from 'quasar/lang/es';
 import TheDialogConfirm from "./Components/TheDialogConfirm.vue";
 import TheDialogResponse from "./Components/TheDialogResponse.vue";

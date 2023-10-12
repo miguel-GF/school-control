@@ -1,4 +1,4 @@
-import { Loading, QSpinnerFacebook } from "quasar";
+import { Loading, QSpinnerFacebook } from "./quasar";
 
 export const loading = (show, message = 'Cargando ...') => {
     show

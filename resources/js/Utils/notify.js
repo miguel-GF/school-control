@@ -1,4 +1,4 @@
-import { Notify } from 'quasar';
+import { Notify } from './quasar';
 
 export const notify = (message, tipo) => {
   let color, icon;
