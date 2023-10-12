@@ -8,6 +8,7 @@
         :filter="filter"
         class="tabla-listado striped-table"
         row-key="cvemat" 
+        ref="table"
       >
         <template v-slot:top-left>
           <div class="row">
@@ -26,11 +27,22 @@
           >
             <div class="q-px-sm">Regresar</div>
           </q-btn>
-          <q-input outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
+          <q-input class="q-mr-md" outlined dense debounce="300" v-model="filter" placeholder="Búsqueda">
             <template v-slot:append>
               <q-icon name="search" />
             </template>
           </q-input>
+
+          <q-btn
+            color="primary"
+            dense
+            no-caps
+            icon-right="las la-file-csv"
+            aria-label="menu"
+            label="Exportar"
+            class="q-px-sm"
+            @click="exportarExcel()"
+        />  
         </template>
         <template v-slot:body-cell-asistencia="props">
           <q-td :props="props" class="text-center">
@@ -48,6 +60,7 @@
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
 import { notify } from "../../Utils/notify.js";
+import excel from "../../Utils/exportExcel.js";
 export default {
   name: "DocenteAsistenciasReporte",
   props: ["asistencias", "usuario", "datos", "fecha"],
@@ -59,6 +72,7 @@ export default {
         {
           name: 'numeroAlumno',
           label: '# Alumno',
+          labelExcel: '# Alumno',
           align: 'left',
           field: row => row.numestudiante,
           format: val => val ?? '--',
@@ -68,6 +82,7 @@ export default {
         {
           name: 'alumno',
           label: 'Alumno',
+          labelExcel: 'Alumno',
           align: 'left',
           field: row => row.nombre,
           format: val => val ?? '--',
@@ -77,6 +92,7 @@ export default {
         {
           name: 'asistencia',
           label: 'Asistencias',
+          labelExcel: 'Asistencias',
           align: 'center',
           field: row => row.cantidad_asistencias,
           format: val => val ?? '--',
@@ -116,6 +132,19 @@ export default {
     regresar() {
       loading(true);
       this.$inertia.get("/docente/asistenciasCargasAcademicas");
+    },
+    exportarExcel() {
+      const valoresNombre = [
+        'asistencias',
+        this.datos['periodo'],
+        this.datos['semestre'] + '°',
+        this.datos['grupo'],
+        this.datos['licenciatura'],
+        this.datos['materia'],
+        this.fecha
+      ];
+      const nombreArchivo = valoresNombre.join('_').replace(/\s/g, '_').toUpperCase();
+      excel.exportarCsv(this.columns, this.$refs.table.filteredSortedRows, nombreArchivo);
     }
   }
 };
