@@ -21,7 +21,7 @@
 
       <q-card-actions align="center" class="q-py-md">
         <q-btn flat label="Cerrar" color="primary" @click="cerrar()" class="q-mr-sm" />
-        <q-btn label="Aceptar" color="primary" @click="aceptar()" />
+        <q-btn :label="labelAceptar" color="primary" @click="aceptar()" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -46,6 +46,10 @@ export default {
       type: String,
       default: 'card-width',
     },
+    labelAceptar: {
+      type: String,
+      default: 'Aceptar',
+    },
   },
   methods: {
     cerrar() {
@@ -62,9 +66,16 @@ export default {
 .card-width {
   width: 500px;
 }
-
 .card-body-height {
   min-height: 25vh;
   max-height: 52vh;
+}
+.card-width-xl {
+  min-width: auto !important;
+  min-width: 90% !important;
+}
+.card-width-xl .card-body-height {
+  min-height: 30vh;
+  max-height: 60vh;
 }
 </style>
