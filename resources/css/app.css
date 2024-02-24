@@ -22,6 +22,10 @@ LISTADO CON HEADER PARA HEIGHT CORRECTO */
   height: calc(100vh - 85px);
   min-height: 600px;
 }
+.tabla-listado-modal {
+  height: calc(100vh - 585px);
+  min-height: 350px;
+}
 
 /* ***************************************** */
 /* ESTILOS PARA TABLA PARA QUE SE VEA 
