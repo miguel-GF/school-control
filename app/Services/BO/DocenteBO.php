@@ -32,6 +32,20 @@ class DocenteBO
   }
 
   /**
+   * armarUpdateAsistencia
+   *
+   * @param  mixed $alumno
+   * @return array
+   */
+  public static function armarUpdateAsistencia(stdClass $alumno): array
+  {
+    $insert = [];
+    $insert['asistencia'] = $alumno->asistencia ? 1 : 0;
+
+    return $insert;
+  }
+
+  /**
    * armarUpdateCalificacion
    *
    * @param  mixed $datos

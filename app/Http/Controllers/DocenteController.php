@@ -118,8 +118,6 @@ class DocenteController extends Controller
 		try {
 			$datos = $request->all();
 			$res = DocenteServiceAction::pasarAsistencias($datos);
-      Log::info('respeusta');
-      Log::info(json_encode($res));
 
 			// $user = Utils::getUser();
 			// $cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
@@ -140,11 +138,31 @@ class DocenteController extends Controller
       return response([
 				'mensaje' => $res->mensaje,
         'status' => $res->status,
+        'asistencias' => $res->asistencias ?? [],
 			]);
 		} catch (\Throwable $th) {
 			Log::error('Error en pasar asistencias ' . $th);
       response([
 				'mensaje' => 'Ocurrio un error al guardar asistencias',
+				'status' => 300
+			], 300);
+		}
+	}
+
+  public function actualizarAsistencias(DocentePasarAsistenciaRequest $request)
+	{
+		try {
+			$datos = $request->all();
+			DocenteServiceAction::actualizarAsistencias($datos);
+
+      return response([
+				'mensaje' => 'Asistencias actualizadas correctamente',
+        'status' => 200,
+			]);
+		} catch (\Throwable $th) {
+			Log::error('Error en actualizar asistencias ' . $th);
+      response([
+				'mensaje' => 'Ocurrio un error al actualizar asistencias',
 				'status' => 300
 			], 300);
 		}

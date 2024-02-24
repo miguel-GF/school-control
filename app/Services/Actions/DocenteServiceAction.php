@@ -2,14 +2,11 @@
 
 namespace App\Services\Actions;
 
-use App\Constants;
 use App\OrderConstants;
 use App\Repos\Actions\DocenteRepoAction;
 use App\Services\BO\DocenteBO;
 use App\Services\Data\AsistenciaServiceData;
-use App\Services\Data\CalificacionServiceData;
 use App\Utils;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -40,8 +37,9 @@ class DocenteServiceAction
       $res->status = 200;
       $res->mensaje = "Asistencias agredadas correctamente";
       if (!empty($asistencias)) {
-        $res->status = 300;
-        $res->mensaje = "Ya existe asistencias para el día de {$datos['fecha']}";
+        $res->status = 201;
+        $res->mensaje = "Ya existen asistencias para el día de {$datos['fecha']}";
+        $res->asistencias = $asistencias;
         return $res;
       }
 
@@ -63,6 +61,40 @@ class DocenteServiceAction
       throw $th;
     }
   }
+
+  /**
+   * actualizarAsistencias
+   *
+   * @param  mixed $datos [idProf, alumnos]
+   */
+  public static function actualizarAsistencias(array $datos)
+  {
+    try {
+      DB::beginTransaction();
+
+      $user = Utils::getUser();
+      $datos['idProf'] = $user->claveusuario;
+      $alumnos = json_decode($datos['alumnos']);
+      $arrayInsert = [];
+      foreach ($alumnos as $alumno) {
+        if (isset($alumno->idAsistencias)) {
+          $update = DocenteBO::armarUpdateAsistencia($alumno);
+          DocenteRepoAction::actualizar($update, $alumno->idAsistencias);
+        } else {
+          $insert = DocenteBO::armarInsertAsistencia($datos, $alumno);
+          array_push($arrayInsert, $insert);
+        }
+      }
+      DocenteRepoAction::agregar($arrayInsert);
+
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollBack();
+      throw $th;
+    }
+  }
+
+  
 
   /**
    * guardarCalificaciones

@@ -192,12 +192,10 @@ export default {
       this.$inertia.get(url);
     },
     irCapturarCalificacion(row) {
-      console.log(row);
       const { idcargaacademica } = row;
       loading(true, 'Cargando ...');
 
       const url = "/docente/capturarCalificaciones/" + idcargaacademica;
-      console.log(url);
       this.$inertia.get(url);
     },
     showNotify (message, tipo) {

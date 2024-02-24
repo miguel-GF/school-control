@@ -40,4 +40,22 @@ class DocenteRepoAction
       throw $th;
     }
   }
+
+  /**
+   * Actualizar registro en Asistencias
+   *
+   * @param  mixed $update
+   * @param  mixed $idAsistencias
+   * @return void
+   */
+  public static function actualizar(array $update, $idAsistencias)
+  {
+    try {
+      DB::table('Asistencias')
+        ->where('idAsistencias', $idAsistencias)
+        ->update($update);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
 }
