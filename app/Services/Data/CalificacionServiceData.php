@@ -25,10 +25,6 @@ class CalificacionServiceData
    */
   public static function listarCalificaciones($filtros)
   {
-    $calificaciones = CalificacionRepoData::listarCalificaciones($filtros);
-    foreach ($calificaciones as $calificacion) {
-      $calificacion->asistencia = false;
-    }
-    return $calificaciones;
+    return CalificacionRepoData::listarCalificaciones($filtros);
   }
 }

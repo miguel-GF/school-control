@@ -7,6 +7,7 @@ use App\Http\Requests\DocentePasarAsistenciaRequest;
 use App\OrderConstants;
 use App\Repos\Data\AsistenciaRepoData;
 use App\Services\Actions\DocenteServiceAction;
+use App\Services\Data\AsistenciaServiceData;
 use App\Services\Data\CalificacionServiceData;
 use App\Services\Data\CargaAcademicaServiceData;
 use App\Services\Data\DocenteServiceData;
@@ -88,7 +89,7 @@ class DocenteController extends Controller
 	 *
 	 * @param  mixed $request
 	 */
-	public function docentePasarAsistenciasCargasAcademicasView($idCargaAcademica)
+	public function docentePasarAsistenciasCargasAcademicasView($idCargaAcademica, $fecha)
 	{
 		$user = Utils::getUser();
 		$cargasAcademicas = CargaAcademicaServiceData::listarCargasAcademicas([
@@ -105,11 +106,39 @@ class DocenteController extends Controller
 				'status' => Constants::ACTIVO_STATUS,
 				'ordenar' => OrderConstants::NOMBRE_ASC,
 			]);
+      $asistencias = AsistenciaServiceData::listarAsistencias([
+        'licenciatura' => $cargasAcademicas[0]->licenciatura,
+        'periodo' => $cargasAcademicas[0]->periodo,
+        'semestre' => $cargasAcademicas[0]->semestre,
+        'grupo' => $cargasAcademicas[0]->grupo,
+        'materia' => $cargasAcademicas[0]->materia,
+        'ordenar' => OrderConstants::NOMBRE_ASC,
+        'fecha' => str_replace('-', '/', $fecha),
+      ]);
+      $totalAsistencias = count($asistencias);
+      foreach ($calificaciones as $calificacion) {
+        $existe = current(array_filter($asistencias, function ($asistencia) use ($calificacion) {
+          return $asistencia->numestudiante == $calificacion->numestudiante;
+        }));
+        if ($existe) {
+          $calificacion->idAsistencias = $existe->idAsistencias;
+          $calificacion->asistencia = $existe->asistencia ? true : false;
+          $calificacion->valor_inicial = $existe->asistencia ? true : false;
+          $calificacion->es_inicial = false;
+        } else {
+          $calificacion->idAsistencias = null;
+          $calificacion->asistencia = false;
+          $calificacion->valor_inicial = false;
+          $calificacion->es_inicial = true;
+        }
+      }
 		}
 		return Inertia::render('Docentes/DocentePasarAsistencia', [
 			'alumnos' => $calificaciones,
 			'usuario' => $user,
-			'idCargaAcademica' => $idCargaAcademica
+			'idCargaAcademica' => $idCargaAcademica,
+      'fechaFiltro' => $fecha,
+      'totalAsistencias' => $totalAsistencias,
 		]);
 	}
 

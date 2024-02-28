@@ -67,6 +67,7 @@
 import MainLayout from '../../Layouts/MainLayout.vue';
 import { loading } from '../../Utils/loading';
 import { notify } from "../../Utils/notify.js";
+import { obtenerFechaActualOperacion } from "../../Utils/date";
 export default {
   props: ["cargasAcademicas", "periodos", "usuario", "filtrosRes", "status", "mensaje"],
   components: { MainLayout },
@@ -188,7 +189,8 @@ export default {
   methods: {
     irPasarAsistencia({ idcargaacademica }) {
       loading(true, 'Cargando ...');
-      const url = "/docente/pasarAsistencias/" + idcargaacademica;
+      const fecha = obtenerFechaActualOperacion().toString().replace(/\//g, "-");
+      const url = "/docente/pasarAsistencias/" + idcargaacademica + "/" + fecha;
       this.$inertia.get(url);
     },
     irCapturarCalificacion(row) {

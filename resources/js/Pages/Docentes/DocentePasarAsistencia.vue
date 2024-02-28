@@ -65,8 +65,8 @@
     </the-dialog-confirm>
 
     <!-- DIALOGO DE EXITO -->
-    <the-dialog-response :mostrar="mostrarModalExito" mensaje="Asistencias agredadas correctamente"
-      @aceptar="(mostrarModalExito = false), reiniciarValores()" />
+    <the-dialog-response :mostrar="mostrarModalExito" :mensaje="mensajeModalExito"
+      @aceptar="(mostrarModalExito = false), recargarInformacion()" />
 
     <!-- DIALOGO DE REEMPLAZAR CALIFICACIONES -->
     <the-dialog-confirm :mostrar="mostrarModalReemplazarCalificaciones" classes="card-width-xl"
@@ -86,7 +86,7 @@
           class="tabla-listado-modal striped-table" row-key="numestudiante">
           <template v-slot:body-cell-anterior="props">
             <q-td :props="props">
-              <q-checkbox :model-value="checarAsistenciaExistente(props.row)" disable />
+              <q-checkbox :model-value="props.row.valor_inicial" disable />
             </q-td>
           </template>
           <template v-slot:body-cell-inicial="props">
@@ -103,7 +103,8 @@
           </template>
           <template v-slot:body-cell-cambio="props">
             <q-td :props="props">
-              <template v-if="props.row.es_inicial || (checarAsistenciaExistente(props.row) != props.row.asistencia)">
+              <!-- <template v-if="props.row.es_inicial || (checarAsistenciaExistente(props.row) != props.row.asistencia)"> -->
+              <template v-if="props.row.es_inicial || (props.row.valor_inicial != props.row.asistencia)">
                 <q-icon name="sync" size="xs" />
               </template>
             </q-td>
@@ -121,11 +122,13 @@ import { obtenerFechaActualOperacion, esFechaValida } from "../../Utils/date";
 import { notify } from "../../Utils/notify";
 import { cloneDeep } from "lodash";
 export default {
-  props: ["alumnos", "status", "mensaje", "idCargaAcademica"],
+  props: ["alumnos", "status", "mensaje", "idCargaAcademica", "fechaFiltro", "totalAsistencias"],
   components: { MainLayout },
   data() {
     return {
       filter: "",
+      mensajeModalExito: "",
+      watchInicial: true,
       columns: [
         {
           name: "numeroEstudiante",
@@ -170,6 +173,7 @@ export default {
         {
           name: "anterior",
           label: "Anterior Asistencia",
+          field: (row) => row.valor_inicial,
           align: "center",
           sortable: false,
         },
@@ -189,7 +193,6 @@ export default {
         },
       ],
       alumnosSeleccionados: [],
-      alumnosOriginal: [],
       alumnosInicial: [],
       alumnosDataFinal: [],
       asistenciasExistentes: [],
@@ -197,26 +200,32 @@ export default {
       mostrarModalExito: false,
       mostrarModalReemplazarCalificaciones: false,
       mensajeConfirmacion: "",
-      fecha: obtenerFechaActualOperacion(),
-      fechaActual: obtenerFechaActualOperacion(),
+      fecha: "",
       optionsFn(date) {
         return date <= obtenerFechaActualOperacion();
       },
     };
   },
   created() {
-    this.alumnosOriginal = cloneDeep(this.alumnos);
     this.alumnosInicial = cloneDeep(this.alumnos);
+    this.alumnosSeleccionados = cloneDeep(this.alumnos.filter((alumno) => alumno.asistencia));
+    if (this.fechaFiltro) {
+      this.fecha = this.fechaFiltro.toString().replace(/\-/g, "/");
+    }
     loading(false);
   },
-  // updated() {
-  //   loading(false);
-  //   if (this.status == 200) {
-  //     this.mostrarModalExito = true;
-  //   } else {
-  //     return notify(this.mensaje, 'error');
-  //   }
-  // },
+  watch: {
+    fecha() {
+      if (this.watchInicial) {
+        this.watchInicial = false;
+      } else {
+        const res = esFechaValida(this.fecha);
+        if (Number(res.status) == 200) {
+          this.recargarInformacion();
+        }
+      }
+    }
+  }, 
   computed: {
     obtenerPeriodo() {
       if (this.alumnosInicial.length == 0) {
@@ -262,16 +271,16 @@ export default {
       return mensajes.join("<br>");
     },
     obtenerMensajeReemplazoConfirmacion() {
-      const asistenciasCantidad = this.asistenciasExistentes.length;
       let mensajes = [];
       mensajes[0] = this.mensajeConfirmacion;
-      mensajes[1] = `Número de asistencias existentes: ${asistenciasCantidad}`;
+      mensajes[1] = `Número de asistencias existentes: ${this.totalAsistencias}`;
       return mensajes.join("<br>");
     },
     obtenerMensajeActualizaciones() {
       let diferentes = 0;
       this.alumnosDataFinal.forEach(alumno => {
-        if (alumno.es_inicial || (this.checarAsistenciaExistente(alumno) != alumno.asistencia)) {
+        // if (alumno.es_inicial || (this.checarAsistenciaExistente(alumno) != alumno.asistencia)) {
+        if (alumno.es_inicial || (alumno.valor_inicial != alumno.asistencia)) {
           diferentes++;
         }
       });
@@ -311,9 +320,24 @@ export default {
             alumnosDataFinal[index].asistencia = true;
           }
         });
+        if (Number(this.totalAsistencias) > 0) {
+          alumnosDataFinal.forEach((as) => {
+            const index = this.alumnosSeleccionados.findIndex(
+              (a) => a.numestudiante == as.numestudiante
+            );
+            if (index >= 0) {
+              as.asistencia = true;
+            } else {
+              as.asistencia = false;
+            }
+          });
+          this.alumnosDataFinal = alumnosDataFinal;
+          this.mensajeConfirmacion = `Ya existen asistencias para el día de ${this.fecha}`;
+          this.mostrarModalReemplazarCalificaciones = true;
+          return;
+        }
         const { semestre, grupo, licenciatura, materia, periodo } =
           this.alumnosInicial[0];
-        this.alumnosDataFinal = alumnosDataFinal;
         const form = {
           fecha: this.fecha,
           licenciatura,
@@ -336,20 +360,9 @@ export default {
         }
         if (data.status >= 300) {
           throw data.mensaje;
-        } else if (data.status == 200) {
+        } else {
+          this.mensajeModalExito = "Asistencias agredadas correctamente";
           this.mostrarModalExito = true;
-        } else if (data.status == 201) {
-          this.mensajeConfirmacion = data.mensaje;
-          this.asistenciasExistentes = data.asistencias;
-          this.alumnosDataFinal.map((alumno) => {
-            const existe = this.asistenciasExistentes.find((ae) => ae.numestudiante == alumno.numestudiante);
-            if (existe) {
-              alumno.es_inicial = false;
-            } else {
-              alumno.es_inicial = true;
-            }
-          });
-          this.mostrarModalReemplazarCalificaciones = true;
         }
         loading(false);
       } catch (error) {
@@ -362,10 +375,6 @@ export default {
       loading(true);
       this.$inertia.get("/docente/cargasAcademicas");
     },
-    reiniciarValores() {
-      this.alumnosSeleccionados = [];
-      this.alumnosInicial = cloneDeep(this.alumnosOriginal);
-    },
     checarAsistenciaExistente(alumno) {
       const existe = this.asistenciasExistentes.find((ae) => ae.numestudiante == alumno.numestudiante);
       if (existe) {
@@ -376,13 +385,6 @@ export default {
     async actualizarCalificaciones() {
       try {
         this.mostrarModalReemplazarCalificaciones = false;
-        let alumnosDataFinal = cloneDeep(this.alumnosDataFinal);
-        alumnosDataFinal.forEach((alumno) => {
-          const alumnoExiste = this.asistenciasExistentes.find((ae) => ae.numestudiante == alumno.numestudiante);
-          if (alumnoExiste) {
-            alumno.idAsistencias = alumnoExiste.idAsistencias;
-          }
-        });
         const { semestre, grupo, licenciatura, materia, periodo } =
           this.alumnosInicial[0];
         const form = {
@@ -391,7 +393,7 @@ export default {
           semestre,
           grupo,
           idCargaAcademica: this.idCargaAcademica,
-          alumnos: JSON.stringify(alumnosDataFinal),
+          alumnos: JSON.stringify(this.alumnosDataFinal),
           periodo,
           materia,
         };
@@ -408,13 +410,20 @@ export default {
         if (data.status != 200) {
           throw data.mensaje;
         } 
+        this.mensajeModalExito = data.mensaje;
+        this.mostrarModalExito = true;
         loading(false);
-        notify(data.mensaje, "exito");
       } catch (error) {
         loading(false);
         notify(error, "error");
       }
     },
+    recargarInformacion() {
+      loading(true);
+      const fecha = this.fecha.toString().replace(/\//g, "-");
+      const url = `/docente/pasarAsistencias/${this.idCargaAcademica}/${fecha}`;
+      this.$inertia.get(url);
+    }
   },
 };
 </script>
