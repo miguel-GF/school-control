@@ -70,8 +70,8 @@
 
     <!-- DIALOGO DE REEMPLAZAR CALIFICACIONES -->
     <the-dialog-confirm :mostrar="mostrarModalReemplazarCalificaciones" classes="card-width-xl"
-      labelAceptar="Actualizar calificaciones"
-      titulo="Actualizar Calificaciones" @cerrar="mostrarModalReemplazarCalificaciones = false"
+      labelAceptar="Actualizar asistencias"
+      titulo="Actualizar Asistencias" @cerrar="mostrarModalReemplazarCalificaciones = false"
       @aceptar="actualizarCalificaciones()">
       <template #body>
         <div class="row col-12 justify-around q-mb-md ">
