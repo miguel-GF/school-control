@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Constants;
+use App\Http\Requests\DocenteAgregarCVRequest;
 use App\Http\Requests\DocentePasarAsistenciaRequest;
 use App\OrderConstants;
 use App\Repos\Data\AsistenciaRepoData;
@@ -258,7 +259,7 @@ class DocenteController extends Controller
 		]);
 	}
 
-  public function guardarCV(Request $request)
+  public function guardarCV(DocenteAgregarCVRequest $request)
 	{
 		try {
 			$datos = $request->all();
@@ -269,9 +270,14 @@ class DocenteController extends Controller
 				'mensaje' => 'Curriculum guardado correctamente',
         'status' => 200,
 			]);
+    } catch (\Illuminate\Validation\ValidationException $th) {
+      return response([
+				'mensaje' => $th->getMessage(),
+				'status' => 300
+			]);
 		} catch (\Throwable $th) {
-			Log::error('Error al guardar curriculum ' . $th);
-      response([
+			Log::error('Error al guardar curriculum' . $th);
+      return response([
 				'mensaje' => 'Error al guardar curriculum',
 				'status' => 300
 			]);

@@ -32,7 +32,7 @@ class ApiKeyMiddleware
 
       if (!$apiKey) {
         return Response::json([
-          'error' => 'Unauthorized'
+          'error' => 'No autorizado'
         ], 401); // Unauthorized
       }
     }
