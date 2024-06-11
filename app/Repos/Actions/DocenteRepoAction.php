@@ -58,4 +58,40 @@ class DocenteRepoAction
       throw $th;
     }
   }
+
+  /**
+   * agregar nuevo registro en curriculum_docentes
+   *
+   * @param  mixed $datos
+   * @return mixed
+   */
+  public static function agregarCurriculum(array $datos)
+  {
+    try {
+      return DB::table('curriculum_docentes')->insertGetId(array_merge($datos, [
+        'folio' => DB::raw("(
+            SELECT COALESCE(MAX(folio), 0) + 1
+            FROM (SELECT folio FROM curriculum_docentes) as temp_table
+        )")
+      ]), 'curriculum_docente_id');
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
+  
+  /**
+   * agregarCurriculumArchivo
+   *
+   * @param  mixed $datos
+   * @return void
+   */
+  public static function agregarCurriculumArchivo(array $datos)
+  {
+    try {
+      DB::table('curriculum_docentes_archivos')
+        ->insert($datos);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
 }

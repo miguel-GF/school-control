@@ -2,6 +2,7 @@
 
 namespace App\Services\Actions;
 
+use App\Constants;
 use App\OrderConstants;
 use App\Repos\Actions\DocenteRepoAction;
 use App\Services\BO\DocenteBO;
@@ -118,5 +119,89 @@ class DocenteServiceAction
       DB::rollBack();
       throw $th;
     }
+  }
+
+  /**
+   * pasarAsistencias
+   *
+   * @param  mixed $datos [nombre, fechaNacimiento]
+   * @return void
+   */
+  public static function guardarCV(array $datos)
+  {
+    DB::transaction(function () use($datos) {
+      // Insert principal
+      $insert = DocenteBO::armarInsertCV($datos);
+      $curriculumDocenteId = DocenteRepoAction::agregarCurriculum($insert);
+      // Insert archivos
+      $nombrePersona = $datos['nombre'];
+      $inserts = [];
+      if (!empty($datos['archivoCurriculum'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_CURRICULUM,
+          $datos['archivoCurriculum'],
+          $datos['descripcionCurriculum'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoIne'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_INE,
+          $datos['archivoIne'],
+          $datos['descripcionIne'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoCurp'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_CURP,
+          $datos['archivoCurp'],
+          $datos['descripcionCurp'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoDomicilio'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_COMPROBANTE_DOMICILIO,
+          $datos['archivoDomicilio'],
+          $datos['descripcionDomicilio'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoSituacionFiscal'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL,
+          $datos['archivoSituacionFiscal'],
+          $datos['descripcionSituacionFiscal'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoActaNacimiento'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_ACTA_NACIMIENTO,
+          $datos['archivoActaNacimiento'],
+          $datos['descripcionActaNacimiento'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($datos['archivoCedula'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_CEDULA_PROFESIONAL,
+          $datos['archivoCedula'],
+          $datos['descripcionCedula'],
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
+      if (!empty($inserts)) {
+        DocenteRepoAction::agregarCurriculumArchivo($inserts);
+      }
+    }, 3);
   }
 }

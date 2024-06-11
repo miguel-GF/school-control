@@ -257,4 +257,24 @@ class DocenteController extends Controller
 			'mensaje' => 'Calificaciones guardadas correctamente',
 		]);
 	}
+
+  public function guardarCV(Request $request)
+	{
+		try {
+			$datos = $request->all();
+
+      DocenteServiceAction::guardarCV($datos);
+
+      return response([
+				'mensaje' => 'Curriculum guardado correctamente',
+        'status' => 200,
+			]);
+		} catch (\Throwable $th) {
+			Log::error('Error al guardar curriculum ' . $th);
+      response([
+				'mensaje' => 'Error al guardar curriculum',
+				'status' => 300
+			]);
+		}
+	}
 }
