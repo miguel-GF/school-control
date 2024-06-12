@@ -49,7 +49,10 @@
                 dense
                 outlined
                 placeholder=""
-                :rules="[val => validarDatoCalificacion(val)]"
+                :rules="[
+                  val => val !== '' && val !== null && val !== undefined || 'Requerida',
+                  val => validarDatoCalificacion(val)
+                ]"
               />
             </q-td>
           </template>
@@ -66,7 +69,10 @@
                 dense
                 outlined
                 placeholder=""
-                :rules="[val => validarDatoCalificacion(val)]"
+                :rules="[
+                  val => val !== '' && val !== null && val !== undefined || 'Requerida',
+                  val => validarDatoCalificacion(val)
+                ]"
               />
             </q-td>
           </template>
@@ -83,7 +89,10 @@
                 dense
                 outlined
                 placeholder=""
-                :rules="[val => validarDatoCalificacion(val)]"
+                :rules="[
+                  val => val !== '' && val !== null && val !== undefined || 'Requerida',
+                  val => validarDatoCalificacion(val)
+                ]"
               />
             </q-td>
           </template>
@@ -91,16 +100,19 @@
             <q-td :props="props">
               <q-input
                 hide-bottom-space
+                v-model.number="props.row.extraordinario"
                 max="10"
                 min="0"
-                v-model.number="props.row.extraordinario"
-                type="number"
                 step="any"
+                type="number"
                 id="extraordinario"
                 dense
                 outlined
                 placeholder=""
-                :rules="[val => validarDatoCalificacion(val)]"
+                :rules="[
+                  val => val !== '' && val !== null && val !== undefined || 'Requerida',
+                  val => validarDatoCalificacion(val)
+                ]"
               />
             </q-td>
           </template>
@@ -117,7 +129,10 @@
                 dense
                 outlined
                 placeholder=""
-                :rules="[val => validarDatoCalificacion(val)]"
+                :rules="[
+                  val => val !== '' && val !== null && val !== undefined || 'Requerida',
+                  val => validarDatoCalificacion(val)
+                ]"
               />
             </q-td>
           </template>
@@ -299,13 +314,15 @@ export default {
       this.$inertia.get('/docente/cargasAcademicas');
     },
     validarDatoCalificacion(val) {
-      if (val != "") {
-        if (Number(val) > 10) {
-          return "No puede ser mayor a 10";
-        }
-        if (Number(val) < 0) {
-          return "No puede ser menor a 0";
-        }
+      val = Number(val);
+      if (isNaN(val)) {
+        return "Debe ser un número";
+      }
+      if (val > 10) {
+        return "No mayor a 10";
+      }
+      if (val < 0) {
+        return "No menor a 0";
       }
       return true;
     },
