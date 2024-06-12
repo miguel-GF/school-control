@@ -199,6 +199,15 @@ class DocenteServiceAction
           $curriculumDocenteId
         );
       }
+      if (!empty($datos['archivoCuentaBancaria'])) {
+        $inserts[] = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_CUENTA_BANCARIA,
+          $datos['archivoCuentaBancaria'],
+          null,
+          $nombrePersona,
+          $curriculumDocenteId
+        );
+      }
       if (!empty($inserts)) {
         DocenteRepoAction::agregarCurriculumArchivo($inserts);
       }

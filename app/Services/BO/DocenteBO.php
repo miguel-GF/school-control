@@ -77,6 +77,7 @@ class DocenteBO
     $insert['estado_civil'] = $datos['estadoCivil'] ?? null;
     $insert['genero'] = $datos['genero'] ?? null;
     $insert['correo_electronico'] = $datos['correo'] ?? null;
+    $insert['correo_institucional'] = $datos['correoInstitucional'] ?? null;
     $insert['numero_celular'] = $datos['celular'] ?? null;
     $insert['facebook'] = $datos['facebook'] ?? null;
     $insert['numero_casa'] = $datos['telefono'] ?? null;
@@ -115,7 +116,7 @@ class DocenteBO
 
     return $insert;
   }
-  
+
   /**
    * armarInsertArchivoCV
    *
@@ -131,18 +132,21 @@ class DocenteBO
     $tamanio = $archivo->getSize();
     $fecha = now()->format('Y-m-d H:i:s');
     $fechaArchivo = now()->format('Y_m_d_H_i_s');
+    $extension = $archivo->getClientOriginalExtension();
+
     $insert['curriculum_docente_id'] = $curriculumDocenteId;
     $insert['archivo'] = file_get_contents($archivo->getRealPath());
     $insert['tipo'] = $tipo;
     $insert['nombre'] = self::armarNombreTipoArchivo($tipo, $nombrePersona, $fechaArchivo);
-    $insert['extension'] = $archivo->getClientOriginalExtension();
+    $insert['extension'] = strtolower($extension);
     $insert['tamanio'] = $tamanio;
     $insert['tamanio_humano'] = Utils::obtenerTamanioLegibleArchivo($tamanio);
     $insert['descripcion'] = $descripcion ? strtoupper($descripcion) : null;
     $insert['registro_fecha'] = $fecha;
+
     return $insert;
   }
-  
+
   /**
    * armarNombreTipoArchivo
    *
