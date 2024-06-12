@@ -14,4 +14,5 @@ class Constants
   const TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL = 'situacion_fiscal';
   const TIPO_ARCHIVO_ACTA_NACIMIENTO = 'acta_nacimiento';
   const TIPO_ARCHIVO_CEDULA_PROFESIONAL = 'cedula_profesional';
+  const TIPO_ARCHIVO_CUENTA_BANCARIA = 'cuenta_bancaria';
 }
