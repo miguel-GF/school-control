@@ -8,7 +8,10 @@ use App\Repos\Actions\DocenteRepoAction;
 use App\Services\BO\DocenteBO;
 use App\Services\Data\AsistenciaServiceData;
 use App\Utils;
+use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use stdClass;
 
 class DocenteServiceAction
@@ -95,7 +98,7 @@ class DocenteServiceAction
     }
   }
 
-  
+
 
   /**
    * guardarCalificaciones
@@ -122,95 +125,169 @@ class DocenteServiceAction
   }
 
   /**
-   * pasarAsistencias
+   * guardarCV
    *
-   * @param  mixed $datos [nombre, fechaNacimiento]
+   * @param  mixed $datos
    * @return void
    */
   public static function guardarCV(array $datos)
   {
-    DB::transaction(function () use($datos) {
+    DB::transaction(function () use ($datos) {
       // Insert principal
       $insert = DocenteBO::armarInsertCV($datos);
       $curriculumDocenteId = DocenteRepoAction::agregarCurriculum($insert);
       // Insert archivos
-      $nombrePersona = $datos['nombre'];
+      $nombrePersona = Utils::limpiarCaracteresEspeciales($datos['nombre']);
       $inserts = [];
+      $archivos = [];
+      $ruta = DocenteBO::armarRutaArchivo($curriculumDocenteId, $nombrePersona);
       if (!empty($datos['archivoCurriculum'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_CURRICULUM,
           $datos['archivoCurriculum'],
           $datos['descripcionCurriculum'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoCurriculum'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoIne'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_INE,
           $datos['archivoIne'],
           $datos['descripcionIne'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoIne'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoCurp'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_CURP,
           $datos['archivoCurp'],
           $datos['descripcionCurp'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoCurp'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoDomicilio'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_COMPROBANTE_DOMICILIO,
           $datos['archivoDomicilio'],
           $datos['descripcionDomicilio'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoDomicilio'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoSituacionFiscal'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL,
           $datos['archivoSituacionFiscal'],
           $datos['descripcionSituacionFiscal'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoSituacionFiscal'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoActaNacimiento'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_ACTA_NACIMIENTO,
           $datos['archivoActaNacimiento'],
           $datos['descripcionActaNacimiento'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoActaNacimiento'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoCedula'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_CEDULA_PROFESIONAL,
           $datos['archivoCedula'],
           $datos['descripcionCedula'],
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoCedula'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($datos['archivoCuentaBancaria'])) {
-        $inserts[] = DocenteBO::armarInsertArchivoCV(
+        $insert = DocenteBO::armarInsertArchivoCV(
           Constants::TIPO_ARCHIVO_CUENTA_BANCARIA,
           $datos['archivoCuentaBancaria'],
           null,
           $nombrePersona,
-          $curriculumDocenteId
+          $curriculumDocenteId,
+          $ruta
         );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoCuentaBancaria'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
       }
       if (!empty($inserts)) {
         DocenteRepoAction::agregarCurriculumArchivo($inserts);
+        foreach ($archivos as $archivo) {
+          // Validar el contenido del archivo
+          if (empty($archivo->archivo) || is_string($archivo->archivo)) {
+            Log::error("Contenido del archivo inválido: " . $archivo->nombre);
+            Log::error(empty($archivo->archivo));
+            Log::error(!is_string($archivo->archivo));
+            continue;
+          }
+
+          // Limpiar el nombre del archivo
+          $archivo->nombre = preg_replace('/[^A-Za-z0-9_\-.]/', '', $archivo->nombre);
+
+          // Construir la ruta completa
+          $rutaCompleta = rtrim($ruta, '/') . '/' . basename($archivo->nombre);
+
+          // Guardar el archivo
+          try {
+            Storage::put($rutaCompleta, file_get_contents($archivo->archivo));
+            Log::info("Archivo guardado correctamente: " . $rutaCompleta);
+          } catch (Exception $e) {
+            Log::error("Error al guardar el archivo: " . $e->getMessage());
+          }
+        }
       }
+      throw new Exception("llego al final");
     }, 3);
   }
 }

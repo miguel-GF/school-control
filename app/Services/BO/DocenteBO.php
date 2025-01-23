@@ -125,24 +125,27 @@ class DocenteBO
    * @param  mixed $descripcion
    * @param  mixed $nombrePersona
    * @param  mixed $curriculumDocenteId
+   * @param  mixed $ruta
    * @return array
    */
-  public static function armarInsertArchivoCV(string $tipo, $archivo, $descripcion, $nombrePersona, $curriculumDocenteId): array
+  public static function armarInsertArchivoCV(string $tipo, $archivo, $descripcion, $nombrePersona, $curriculumDocenteId, $ruta): array
   {
     $tamanio = $archivo->getSize();
     $fecha = now()->format('Y-m-d H:i:s');
     $fechaArchivo = now()->format('Y_m_d_H_i_s');
-    $extension = $archivo->getClientOriginalExtension();
+    $extension = strtolower($archivo->getClientOriginalExtension());
+    $insert = [];
 
     $insert['curriculum_docente_id'] = $curriculumDocenteId;
     $insert['archivo'] = file_get_contents($archivo->getRealPath());
     $insert['tipo'] = $tipo;
-    $insert['nombre'] = self::armarNombreTipoArchivo($tipo, $nombrePersona, $fechaArchivo);
-    $insert['extension'] = strtolower($extension);
+    $insert['nombre'] = self::armarNombreTipoArchivo($tipo, $nombrePersona, $fechaArchivo) . "." . $extension;
+    $insert['extension'] = $extension;
     $insert['tamanio'] = $tamanio;
     $insert['tamanio_humano'] = Utils::obtenerTamanioLegibleArchivo($tamanio);
     $insert['descripcion'] = $descripcion ? strtoupper($descripcion) : null;
     $insert['registro_fecha'] = $fecha;
+    $insert['ruta'] = $ruta;
 
     return $insert;
   }
@@ -162,5 +165,21 @@ class DocenteBO
     $nombreArchivo[] = $fecha;
     $nombreArchivo = strtoupper(implode('_', $nombreArchivo));
     return $nombreArchivo;
+  }
+
+  /**
+   * armarNombreTipoArchivo
+   *
+   * @param  int $curriculumId
+   * @param  mixed $nombrePersona
+   * @return string
+   */
+  public static function armarRutaArchivo(int $curriculumId, string $nombrePersona): string
+  {
+    $idNombre = "$curriculumId $nombrePersona";
+    $nombreRuta[] = "curriculums_archivos";
+    $nombreRuta[] = implode('_', explode(' ',trim($idNombre)));
+    $nombreRuta = strtoupper(implode('/', $nombreRuta));
+    return $nombreRuta;
   }
 }
