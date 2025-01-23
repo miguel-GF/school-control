@@ -267,13 +267,11 @@ class DocenteServiceAction
           // Validar el contenido del archivo
           if (empty($archivo->archivo) || is_string($archivo->archivo)) {
             Log::error("Contenido del archivo inválido: " . $archivo->nombre);
-            Log::error(empty($archivo->archivo));
-            Log::error(!is_string($archivo->archivo));
             continue;
           }
 
           // Limpiar el nombre del archivo
-          $archivo->nombre = preg_replace('/[^A-Za-z0-9_\-.]/', '', $archivo->nombre);
+          // $archivo->nombre = preg_replace('/[^A-Za-z0-9_\-.]/', '', $archivo->nombre);
 
           // Construir la ruta completa
           $rutaCompleta = rtrim($ruta, '/') . '/' . basename($archivo->nombre);
@@ -287,7 +285,6 @@ class DocenteServiceAction
           }
         }
       }
-      throw new Exception("llego al final");
     }, 3);
   }
 }
