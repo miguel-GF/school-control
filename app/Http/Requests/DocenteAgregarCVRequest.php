@@ -58,7 +58,7 @@ class DocenteAgregarCVRequest extends FormRequest
       'genero.required' => 'Género es requerido.',
       // 'correo.required' => 'Correo electrónico es requerido.',
       'correo.email' => 'Correo electrónico es inválido, favor de verificar.',
-      'correoInstitucional.required' => 'Correo insitucional es requerido.',
+      'correoInstitucional.required' => 'Correo institucional es requerido.',
       'correoInstitucional.email' => 'Correo institucional es inválido, favor de verificar.',
       'celular.required' => 'No de celular es requerido.',
       'domicilioCalle.required' => 'Calle es requerida.',
