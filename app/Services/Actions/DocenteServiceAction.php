@@ -261,6 +261,21 @@ class DocenteServiceAction
         $insertObj->nombre = $insert['nombre'];
         $archivos[] = $insertObj;
       }
+      if (!empty($datos['archivoPlaneacionAcademica'])) {
+        $insert = DocenteBO::armarInsertArchivoCV(
+          Constants::TIPO_ARCHIVO_PLANEACION_ACADEMICA,
+          $datos['archivoPlaneacionAcademica'],
+          $datos['descripcionPlaneacionAcademica'],
+          $nombrePersona,
+          $curriculumDocenteId,
+          $ruta
+        );
+        $inserts[] = $insert;
+        $insertObj = new stdClass();
+        $insertObj->archivo = $datos['archivoPlaneacionAcademica'];
+        $insertObj->nombre = $insert['nombre'];
+        $archivos[] = $insertObj;
+      }
       if (!empty($inserts)) {
         DocenteRepoAction::agregarCurriculumArchivo($inserts);
         foreach ($archivos as $archivo) {
