@@ -53,4 +53,34 @@ class CalificacionRH
       }
     }
   }
+
+  /**
+   * obtenerFiltrosConfiguracionesCapturaCalificaciones
+   *
+   * @param  mixed $query
+   * @param  mixed $filtros
+   * @return void
+   */
+  public static function obtenerFiltrosConfiguracionesCapturaCalificaciones(&$query, array $filtros)
+  {
+    if (!empty($filtros['periodo'])) {
+      $query->where('ccc.periodo', $filtros['periodo']);
+    }
+
+    if (!empty($filtros['ordenar'])) {
+      switch ($filtros['ordenar']) {
+        case OrderConstants::NOMBRE_ASC:
+          $query->orderBy('ccc.periodo');
+          break;
+        case OrderConstants::NOMBRE_DESC:
+          $query->orderByDesc('ccc.periodo');
+          break;
+        default:
+          $query->orderBy('ccc.id');
+          break;
+      }
+    } else {
+      $query->orderBy('ccc.id');
+    }
+  }
 }

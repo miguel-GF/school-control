@@ -10,6 +10,10 @@
   width: 700px !important;
 }
 
+.bg-disable {
+  background-color: #dcbdcb;
+}
+
 /* CLASE PARA EL LOADER GLOBAL */
 .class-loading {
   font-size: 20px;

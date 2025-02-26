@@ -55,4 +55,48 @@ class CalificacionRepoData
 
     return $query->get()->toArray();
   }
+
+  /**
+   * obtenerConfiguracionesCapturaCalificaciones
+  * @param  mixed $filtros
+   * @return array
+   */
+  public static function obtenerConfiguracionesCapturaCalificaciones($filtros)
+  {
+    $query = DB::table('configcapturacalificaciones as ccc')
+      ->select(
+        'ccc.id',
+        'ccc.periodo',
+        DB::raw("
+          (CASE
+            WHEN ccc.statusperiodo = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS statusperiodo,
+          (CASE
+            WHEN `1erparcial` = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS periodoParcialUno,
+          (CASE
+            WHEN `2oparcial` = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS periodoParcialDos,
+          (CASE
+            WHEN ccc.ordinario = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS periodoOrdinario,
+          (CASE
+            WHEN ccc.extraordinario = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS periodoExtraordinario,
+          (CASE
+            WHEN ccc.final = 1 THEN 'ACTIVO'
+            ELSE 'INACTIVO'
+          END) AS periodoFinal
+        ")
+      );
+
+      CalificacionRH::obtenerFiltrosConfiguracionesCapturaCalificaciones($query, $filtros);
+
+    return $query->get()->toArray();
+  }
 }

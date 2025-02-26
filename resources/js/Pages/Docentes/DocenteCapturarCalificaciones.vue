@@ -43,6 +43,8 @@
                 max="10"
                 min="0"
                 v-model.number="props.row.primerparcial"
+                :disable="periodoInactivo || periodoParcialUno == 'inactivo'"
+                :class="{'bg-disable': periodoInactivo || periodoParcialUno == 'inactivo'}"
                 type="number"
                 step="any"
                 id="primerParcial"
@@ -63,6 +65,8 @@
                 max="10"
                 min="0"
                 v-model.number="props.row.segundoparcial"
+                :disable="periodoInactivo || periodoParcialDos == 'inactivo'"
+                :class="{'bg-disable': periodoInactivo || periodoParcialDos == 'inactivo'}"
                 type="number"
                 step="any"
                 id="segundoParcial"
@@ -83,6 +87,8 @@
                 max="10"
                 min="0"
                 v-model.number="props.row.ordinario"
+                :disable="periodoInactivo || periodoOrdinario == 'inactivo'"
+                :class="{'bg-disable': periodoInactivo || periodoOrdinario == 'inactivo'}"
                 type="number"
                 step="any"
                 id="ordinario"
@@ -101,6 +107,8 @@
               <q-input
                 hide-bottom-space
                 v-model.number="props.row.extraordinario"
+                :disable="periodoInactivo || periodoExtraordinario == 'inactivo'"
+                :class="{'bg-disable': periodoInactivo || periodoExtraordinario == 'inactivo'}"
                 max="10"
                 min="0"
                 step="any"
@@ -123,6 +131,8 @@
                 max="10"
                 min="0"
                 v-model.number="props.row.final"
+                :disable="periodoInactivo || periodoFinal == 'inactivo'"
+                :class="{'bg-disable': periodoInactivo || periodoFinal == 'inactivo'}"
                 type="number"
                 step="any"
                 id="final"
@@ -169,11 +179,16 @@ import { loading } from '../../Utils/loading';
 import { notify } from '../../Utils/notify';
 export default {
   name: "DocenteCapturarCalificaciones",
-  props: ["calificaciones", "status", "mensaje", "idCargaAcademica"],
+  props: ["calificaciones", "status", "mensaje", "idCargaAcademica", "configuracionCapturaCalificaciones"],
   components: { MainLayout },
   data() {
     return {
       filter: "",
+      periodoParcialUno: "inactivo",
+      periodoParcialDos: "inactivo",
+      periodoOrdinario: "inactivo",
+      periodoExtraordinario: "inactivo",
+      periodoFinal: "inactivo",
       columns: [
         {
           name: 'numeroEstudiante',
@@ -241,6 +256,14 @@ export default {
   },
   created() {
     loading(false);
+    if (this.configuracionCapturaCalificaciones.length > 0) {
+      const { periodoParcialUno, periodoParcialDos, periodoOrdinario, periodoExtraordinario, periodoFinal } = this.configuracionCapturaCalificaciones[0];
+      this.periodoParcialUno = periodoParcialUno.toLowerCase();
+      this.periodoParcialDos = periodoParcialDos.toLowerCase();
+      this.periodoOrdinario = periodoOrdinario.toLowerCase();
+      this.periodoExtraordinario = periodoExtraordinario.toLowerCase();
+      this.periodoFinal = periodoFinal.toLowerCase();
+    }
   },
   updated() {
     loading(false);
@@ -249,6 +272,12 @@ export default {
     }
   },
   computed: {
+    periodoInactivo() {
+      if (this.configuracionCapturaCalificaciones.length == 0 || this.configuracionCapturaCalificaciones[0].statusperiodo.toLowerCase() == 'inactivo') {
+        return true;
+      }
+      return false;
+    },
     obtenerPeriodo() {
       if (this.calificaciones.length == 0) {
         return '--';
@@ -299,14 +328,18 @@ export default {
       }
     },
     guardarCalificaciones() {
-      this.mostrarModalConfirmar = false;
-      const form = {
-        calificaciones: JSON.stringify(this.calificaciones),
-        idCargaAcademica: this.idCargaAcademica,
-        fecha: this.fecha,
-      };
-      loading(true, 'Agregando ...');
-      this.$inertia.post("/docente/guardarCalificaciones", form);
+      try {
+        this.mostrarModalConfirmar = false;
+        const form = {
+          calificaciones: JSON.stringify(this.calificaciones),
+          idCargaAcademica: this.idCargaAcademica,
+          fecha: this.fecha,
+        };
+        loading(true, 'Agregando ...');
+        this.$inertia.post("/docente/guardarCalificaciones", form);
+      } catch (error) {
+        console.log('lelgo al error', error);
+      }
     },
     irCargasAcademicas() {
       this.mostrarModalExito = false;
