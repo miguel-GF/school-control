@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Constants;
 use App\Http\Requests\DocenteAgregarCVRequest;
 use App\Http\Requests\DocentePasarAsistenciaRequest;
+use App\Models\CurriculumDocenteArchivo;
 use App\OrderConstants;
 use App\Repos\Data\AsistenciaRepoData;
 use App\Repos\Data\CalificacionRepoData;
@@ -15,8 +16,10 @@ use App\Services\Data\CargaAcademicaServiceData;
 use App\Services\Data\DocenteServiceData;
 use App\Utils;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use stdClass;
 
 class DocenteController extends Controller
 {
@@ -288,5 +291,83 @@ class DocenteController extends Controller
         'status' => 300
       ]);
     }
+  }
+
+  public function listarCVS(Request $request)
+  {
+    try {
+      // $datos = $request->all();
+
+      $query = DB::table('curriculum_docentes')
+        ->select('*');
+
+      Log::info($query->get()->toArray());
+
+      return response([
+        'mensaje' => 'Curriculums listados correctamente',
+        'curriculums' => $query->get()->toArray(),
+        'status' => 200,
+      ]);
+    } catch (\Throwable $th) {
+      Log::error('Error al listar curriculum' . $th);
+      return response([
+        'mensaje' => 'Error al listar curriculum',
+        'status' => 300
+      ]);
+    }
+  }
+
+  public function detalleCV(Request $request, $id)
+  {
+    try {
+      // $datos = $request->all();
+      $queryPrincipal = DB::table('curriculum_docentes')
+        ->select('*')
+        ->where('curriculum_docente_id', $id)
+        ->get()->first();
+
+      $query = DB::table('curriculum_docentes_archivos')
+        ->select(
+          'curriculum_docente_archivo_id',
+          'curriculum_docente_id',
+          'tipo',
+          'nombre',
+          'descripcion'
+        )
+        ->where('curriculum_docente_id', $id);
+
+      $curriculum = new stdClass();
+      $curriculum->curriculum_docente_id = $id;
+      $curriculum->nombre = $queryPrincipal->nombre;
+      $curriculum->documentos = $query->get()->toArray();
+
+      return response([
+        'mensaje' => 'Curriculums archivos obtenidos correctamente',
+        'curriculum' => $curriculum,
+        'status' => 200,
+      ]);
+    } catch (\Throwable $th) {
+      Log::error('Error al listar curriculum archivos' . $th);
+      return response([
+        'mensaje' => 'Error al listar curriculum archivos',
+        'status' => 300
+      ]);
+    }
+  }
+
+  public function descargarDocumento(Request $request)
+  {
+    $datos = $request->all();
+    $id = $datos['archivoId'];
+    $archivo = CurriculumDocenteArchivo::findOrFail($id);
+
+    // Asegúrate de que la ruta esté protegida y sea válida
+    $ruta = storage_path("app/$archivo->ruta/$archivo->nombre");
+
+    if (!file_exists($ruta)) {
+      abort(404, 'Archivo no encontrado ???');
+    }
+
+    return response()->download($ruta, $archivo->nombre);
   }
 }
