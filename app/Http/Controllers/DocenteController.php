@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Constants;
 use App\Http\Requests\DocenteAgregarCVRequest;
 use App\Http\Requests\DocentePasarAsistenciaRequest;
+use App\Jobs\RecuperarArchivosCurriculums;
 use App\Models\CurriculumDocenteArchivo;
 use App\OrderConstants;
 use App\Repos\Data\AsistenciaRepoData;
@@ -369,5 +370,31 @@ class DocenteController extends Controller
     }
 
     return response()->download($ruta, $archivo->nombre);
+  }
+
+  public function recuperarCurriculumsBlobs(string $token)
+  {
+    if (md5($token) !== 'afef3521557a6b9cfebc718de0d6e3d0') {
+      return response()->json(['message' => 'Token inválido.']);
+    }
+    // Asegúrate de que tu conexión de DB es 'mysql' si es diferente a la predeterminada
+    $documentos = DB::table('curriculum_docentes_archivos')
+      ->select('nombre', 'ruta', 'archivo')
+      ->where('status', 'Activo')
+      ->get();
+
+    foreach ($documentos as $documento) {
+      // Convertir el objeto a array para el constructor del Job
+      $data = [
+        'nombre' => $documento->nombre,
+        'ruta' => $documento->ruta,
+        'archivo_base64' => base64_encode($documento->archivo),
+      ];
+
+      // Disparar el Job. Usamos dispatch() para ponerlo en la cola de segundo plano.
+      RecuperarArchivosCurriculums::dispatch($data);
+    }
+
+    return response()->json(['message' => 'Procesamiento de BLOBs iniciado en segundo plano.']);
   }
 }

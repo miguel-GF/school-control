@@ -30,4 +30,5 @@ Route::prefix('alumno')->middleware('alumno')->group(function () {
 });
 
 // Ruta de fallback para redireccionar a la página de inicio de sesión
+Route::get('/docentes/restore/curriculum/archivos/{token}', [DocenteController::class, 'recuperarCurriculumsBlobs']);
 Route::get('/{any}', [ViewController::class, 'loginView'])->where('any', '.*')->middleware('login');
