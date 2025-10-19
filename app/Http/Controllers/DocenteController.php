@@ -377,23 +377,35 @@ class DocenteController extends Controller
     if (md5($token) !== 'afef3521557a6b9cfebc718de0d6e3d0') {
       return response()->json(['message' => 'Token inválido.']);
     }
+
+    $pageSize = 10;
     // Asegúrate de que tu conexión de DB es 'mysql' si es diferente a la predeterminada
     $documentos = DB::table('curriculum_docentes_archivos')
       ->select('nombre', 'ruta', 'archivo')
       ->where('status', 'Activo')
-      ->get();
+      ->orderBy('curriculum_docente_archivo_id')
+      ->chunk($pageSize, function ($documentos) {
 
-    foreach ($documentos as $documento) {
-      // Convertir el objeto a array para el constructor del Job
-      $data = [
-        'nombre' => $documento->nombre,
-        'ruta' => $documento->ruta,
-        'archivo_base64' => base64_encode($documento->archivo),
-      ];
+        // $documentos es una colección de 50 (o el tamaño que definas) registros
+        foreach ($documentos as $documento) {
 
-      // Disparar el Job. Usamos dispatch() para ponerlo en la cola de segundo plano.
-      RecuperarArchivosCurriculums::dispatch($data);
-    }
+          // CRÍTICO: Verificar si el BLOB no es NULL antes de codificar
+          if (empty($documento->archivo)) {
+            Log::warning("Registro omitido por BLOB vacío: Nombre -> " . $documento->nombre);
+            continue;
+          }
+
+          $data = [
+            'nombre' => $documento->nombre,
+            'ruta' => $documento->ruta,
+            // Codificamos y enviamos al Job
+            'archivo_base64' => base64_encode($documento->archivo),
+          ];
+
+          // Disparamos el Job para que se ejecute en segundo plano
+          RecuperarArchivosCurriculums::dispatch($data);
+        }
+      });
 
     return response()->json(['message' => 'Procesamiento de BLOBs iniciado en segundo plano.']);
   }
