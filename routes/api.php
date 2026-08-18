@@ -1,6 +1,6 @@
 <?php
 
-// use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocenteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +14,9 @@ Route::prefix('v1')->middleware('api.key')->group(function () {
   // Route::prefix('auth')->group(function () {
   //   Route::post('/login', [AuthController::class, 'loginMovil']);
   // });
+  Route::prefix('auth')->group(function () {
+    Route::post('/login/portalcv', [AuthController::class, 'loginPortalCv']);
+  });
   Route::prefix('docente')->group(function () {
     Route::post('/cv', [DocenteController::class, 'guardarCV']);
     Route::get('/cvs', [DocenteController::class, 'listarCVS']);

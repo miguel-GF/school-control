@@ -4,6 +4,7 @@ namespace App\Services\Actions;
 use App\Constants;
 use App\Models\Alumno;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class AuthServiceAction
 {    
@@ -56,5 +57,17 @@ class AuthServiceAction
       } else {
         return false;
       }
+    }
+
+    public static function loginPortal(array $datos): bool
+    {
+      $query = DB::table('accesoexpedientesdocentes')
+      ->where('usuario', $datos['usuario'])
+      ->whereRaw('SHA2(contrasena, 256) = ?', [$datos['password']])
+      ->get()
+      ->first()
+      ;
+
+      return !empty($query);
     }
 }
