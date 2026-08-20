@@ -61,13 +61,19 @@ class AuthServiceAction
 
     public static function loginPortal(array $datos): bool
     {
-      $query = DB::table('accesoexpedientesdocentes')
-      ->where('usuario', $datos['usuario'])
-      ->whereRaw('SHA2(contrasena, 256) = ?', [$datos['password']])
-      ->get()
-      ->first()
-      ;
+      $usuario = DB::table('accesoexpedientesdocentes')
+        ->where('usuario', $datos['usuario'])
+        ->whereRaw('SHA2(contrasena, 256) = ?', [$datos['password']])
+        ->first();
 
-      return !empty($query);
+      if (empty($usuario)) {
+        return false;
+      }
+
+      DB::table('accesoexpedientesdocentes')
+        ->where('usuario', $datos['usuario'])
+        ->update(['ultimo_acceso' => now()]);
+
+      return true;
     }
 }

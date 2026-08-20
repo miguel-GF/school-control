@@ -300,7 +300,9 @@ class DocenteController extends Controller
       // $datos = $request->all();
 
       $query = DB::table('curriculum_docentes')
-        ->select('*');
+        ->select('*')
+        ->orderByDesc('registro_fecha')
+        ->orderByDesc('curriculum_docente_id');
 
       Log::info($query->get()->toArray());
 
@@ -335,7 +337,9 @@ class DocenteController extends Controller
           'nombre',
           'descripcion'
         )
-        ->where('curriculum_docente_id', $id);
+        ->where('curriculum_docente_id', $id)
+        ->orderBy('nombre')
+        ->orderBy('curriculum_docente_archivo_id');
 
       $curriculum = new stdClass();
       $curriculum->curriculum_docente_id = $id;
