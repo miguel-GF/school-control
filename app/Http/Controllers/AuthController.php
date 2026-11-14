@@ -3,12 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Services\Actions\AuthServiceAction;
+use App\Models\Alumno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AuthController extends Controller
 {
+  public function loginAlumnoApi(Request $request)
+  {
+    $datos = $request->validate([
+      'matricula' => ['required', 'string', 'max:64'],
+      'password' => ['required', 'string', 'max:255'],
+    ]);
+    $alumno = Alumno::where('numestudiante', $datos['matricula'])
+      ->where('contrasena', $datos['password'])->first();
+
+    if (!$alumno) {
+      return response()->json(['message' => 'Matrícula o contraseña incorrecta.'], 401);
+    }
+
+    return response()->json([
+      'token' => $alumno->createToken('school-control-mobile')->plainTextToken,
+      'student' => [
+        'id' => (string) $alumno->getKey(),
+        'matricula' => (string) $alumno->numestudiante,
+        'name' => (string) $alumno->nombre,
+        'program' => '',
+        'semester' => 0,
+        'email' => '',
+        'campus' => '',
+      ],
+    ]);
+  }
+
+  public function alumnoActual(Request $request)
+  {
+    $alumno = $request->user();
+
+    return response()->json(['student' => [
+      'id' => (string) $alumno->getKey(),
+      'matricula' => (string) $alumno->numestudiante,
+      'name' => (string) $alumno->nombre,
+      'program' => '',
+      'semester' => 0,
+      'email' => '',
+      'campus' => '',
+    ]]);
+  }
+
+  public function logoutAlumnoApi(Request $request)
+  {
+    $request->user()->currentAccessToken()?->delete();
+
+    return response()->json(['message' => 'Sesión cerrada.']);
+  }
+
   public function login(Request $request)
   {
     $request->validate([

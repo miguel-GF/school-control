@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocenteController;
+use App\Http\Controllers\MobilePaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,23 @@ Route::prefix('v1')->middleware('api.key')->group(function () {
     Route::get('/cvs', [DocenteController::class, 'listarCVS']);
     Route::get('/cv/{id}', [DocenteController::class, 'detalleCV']);
     Route::post('/descargar/documento', [DocenteController::class, 'descargarDocumento']);
+  });
+});
+
+Route::prefix('v1/mobile')->group(function () {
+  Route::post('/auth/login', [AuthController::class, 'loginAlumnoApi'])->middleware('throttle:10,1');
+  Route::post('/payments/stripe/webhook', [MobilePaymentController::class, 'webhook']);
+
+  Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'alumnoActual']);
+    Route::post('/auth/logout', [AuthController::class, 'logoutAlumnoApi']);
+    Route::get('/payment-config', [MobilePaymentController::class, 'configuracion']);
+    Route::post('/payment-methods/setup-intent', [MobilePaymentController::class, 'crearSetupIntent']);
+    Route::get('/payment-methods', [MobilePaymentController::class, 'listarTarjetas']);
+    Route::delete('/payment-methods/{paymentMethodId}', [MobilePaymentController::class, 'eliminarTarjeta']);
+    Route::post('/payments', [MobilePaymentController::class, 'crearPago'])->middleware('throttle:20,1');
+    Route::post('/payments/{paymentIntentId}/confirm', [MobilePaymentController::class, 'confirmarPago']);
+    Route::get('/payments', [MobilePaymentController::class, 'listarPagos']);
   });
 });
 
