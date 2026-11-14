@@ -57,7 +57,7 @@
 <script setup>
 import { ref } from "vue";
 import ItemMenu from "../Components/ItemMenu.vue";
-import { Link } from "@inertiajs/inertia-vue3";
+import { Link } from "@inertiajs/vue3";
 const leftDrawerOpen = ref(false);
 const rightDrawerOpen = ref(false);
 const opcionesAlumnos = ref([

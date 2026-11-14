@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="mostrar" persistent>
+  <q-dialog :model-value="mostrar" persistent>
     <q-card :class="classes">
       <q-card-section class="row">
         <div class="text-h6 ellipsis">{{ titulo }}</div>
