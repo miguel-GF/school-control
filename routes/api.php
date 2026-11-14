@@ -27,6 +27,10 @@ Route::prefix('v1')->middleware('api.key')->group(function () {
 });
 
 Route::prefix('v1/mobile')->group(function () {
+  Route::get('/health', fn () => response()->json([
+    'ok' => true,
+    'service' => 'school-control-mobile',
+  ]));
   Route::post('/auth/login', [AuthController::class, 'loginAlumnoApi'])->middleware('throttle:10,1');
   Route::post('/payments/stripe/webhook', [MobilePaymentController::class, 'webhook']);
 
