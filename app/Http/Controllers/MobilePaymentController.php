@@ -61,6 +61,29 @@ class MobilePaymentController extends Controller
         return response()->json(['data' => $cards]);
     }
 
+    public function adjuntarTarjeta(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'payment_method_id' => ['required', 'string', 'starts_with:pm_'],
+        ]);
+        $customer = $this->customerFor($request);
+        $method = $this->gateway()->attachPaymentMethod(
+            $customer->provider_customer_id,
+            $validated['payment_method_id']
+        );
+        $card = $method['card'] ?? [];
+
+        return response()->json([
+            'data' => [
+                'id' => $method['id'],
+                'brand' => $card['brand'] ?? 'unknown',
+                'last4' => $card['last4'] ?? '',
+                'exp_month' => $card['exp_month'] ?? null,
+                'exp_year' => $card['exp_year'] ?? null,
+            ],
+        ], 201);
+    }
+
     public function eliminarTarjeta(Request $request, string $paymentMethodId): JsonResponse
     {
         $customer = PaymentCustomer::where('alumno_id', $request->user()->getKey())

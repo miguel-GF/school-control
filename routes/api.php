@@ -39,6 +39,7 @@ Route::prefix('v1/mobile')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logoutAlumnoApi']);
     Route::get('/payment-config', [MobilePaymentController::class, 'configuracion']);
     Route::post('/payment-methods/setup-intent', [MobilePaymentController::class, 'crearSetupIntent']);
+    Route::post('/payment-methods', [MobilePaymentController::class, 'adjuntarTarjeta']);
     Route::get('/payment-methods', [MobilePaymentController::class, 'listarTarjetas']);
     Route::delete('/payment-methods/{paymentMethodId}', [MobilePaymentController::class, 'eliminarTarjeta']);
     Route::post('/payments', [MobilePaymentController::class, 'crearPago'])->middleware('throttle:20,1');

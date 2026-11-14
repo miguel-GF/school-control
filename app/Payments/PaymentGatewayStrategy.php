@@ -16,6 +16,8 @@ interface PaymentGatewayStrategy
 
     public function listPaymentMethods(string $customerId): array;
 
+    public function attachPaymentMethod(string $customerId, string $paymentMethodId): array;
+
     public function detachPaymentMethod(string $paymentMethodId): void;
 
     public function verifyWebhook(string $payload, string $signature): array;

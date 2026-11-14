@@ -71,6 +71,15 @@ class StripePaymentStrategy implements PaymentGatewayStrategy
         return $this->stripe->paymentMethods->all(['customer' => $customerId, 'type' => 'card'])->data;
     }
 
+    public function attachPaymentMethod(string $customerId, string $paymentMethodId): array
+    {
+        $method = $this->stripe->paymentMethods->attach($paymentMethodId, [
+            'customer' => $customerId,
+        ]);
+
+        return $method->toArray();
+    }
+
     public function detachPaymentMethod(string $paymentMethodId): void
     {
         $this->stripe->paymentMethods->detach($paymentMethodId, []);
