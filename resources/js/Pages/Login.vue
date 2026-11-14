@@ -121,6 +121,9 @@
               </q-tab-panel>
             </q-tab-panels>
           </q-card>
+          <div class="text-center text-white q-mt-md">
+            <span class="text-caption">{{ appName }} · v{{ frontendVersion }}</span>
+          </div>
         </div>
         <div class="col-4"></div>
       </div>
@@ -132,6 +135,7 @@
 <script>
 import { notify } from "../Utils/notify.js";
 import { loading } from "../Utils/loading.js";
+import { APP_NAME, FRONTEND_VERSION } from "../constants.js";
 export default {
   data() {
     return {
@@ -143,6 +147,14 @@ export default {
       tab: "alumnos",
       mostrarSpinner: false,
     };
+  },
+  computed: {
+    appName() {
+      return APP_NAME;
+    },
+    frontendVersion() {
+      return FRONTEND_VERSION;
+    },
   },
   created() {
     loading(false);

@@ -35,3 +35,10 @@ php artisan serve
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 ```
+
+### Versiones desplegadas
+
+- Frontend: `FRONTEND_VERSION` en `.env`, se muestra en la pantalla de login.
+- API: `API_VERSION` en `.env`, se expone en `GET /api`.
+
+Ambas versiones son independientes y se pueden subir por separado.

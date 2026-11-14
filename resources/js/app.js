@@ -4,6 +4,7 @@ import { createApp, h } from "vue";
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { Quasar, Notify, Loading } from "./Utils/quasar";
+import { APP_NAME } from "./constants";
 import langEs from 'quasar/lang/es';
 import TheDialogConfirm from "./Components/TheDialogConfirm.vue";
 import TheDialogResponse from "./Components/TheDialogResponse.vue";
@@ -17,10 +18,8 @@ import 'quasar/src/css/index.sass';
 // Images assets
 import.meta.glob([ '../images/**', ]);
 
-const appName = import.meta.env.VITE_APP_NAME || 'School Control';
-
 createInertiaApp({
-  title: (title) => (title ? `${title} - ${appName}` : appName),
+  title: (title) => (title ? `${title} - ${APP_NAME}` : APP_NAME),
   resolve: (name) =>
     resolvePageComponent(
       `./Pages/${name}.vue`,

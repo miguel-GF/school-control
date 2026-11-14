@@ -20,6 +20,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API Version
+    |--------------------------------------------------------------------------
+    |
+    | Version desplegada de la API. Es independiente de la version del
+    | frontend y se expone en el home de la API para verificaciones.
+    |
+    */
+
+    'api_version' => env('API_VERSION', '1.1.0'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
