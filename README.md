@@ -2,12 +2,12 @@
 ### **Proyecto sistema escolar**
 
 Desarrollado con:
-+ Laravel 10
++ Laravel 13
 + Inertia
 + Vue 3
 + Quasar 2
 + Node.js 18
-+ Php 8.1
++ PHP 8.4
 
 Instalar dependencias de npm
 ```bash
