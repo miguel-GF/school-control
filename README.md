@@ -42,3 +42,7 @@ php artisan serve
 - API: `API_VERSION` en `.env`, se expone en `GET /api`.
 
 Ambas versiones son independientes y se pueden subir por separado.
+
+### Documentación
+
+- [Guía de despliegue y solución de pantalla en blanco](docs/despliegue.md)
