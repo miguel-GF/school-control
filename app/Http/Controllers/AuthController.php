@@ -25,15 +25,7 @@ class AuthController extends Controller
 
     return response()->json([
       'token' => $alumno->createToken('school-control-mobile')->plainTextToken,
-      'student' => [
-        'id' => (string) $alumno->getKey(),
-        'matricula' => (string) $alumno->numestudiante,
-        'name' => (string) $alumno->nombre,
-        'program' => '',
-        'semester' => 0,
-        'email' => '',
-        'campus' => '',
-      ],
+      'student' => $this->alumnoPayload($alumno),
     ]);
   }
 
@@ -54,17 +46,23 @@ class AuthController extends Controller
 
   public function alumnoActual(Request $request)
   {
-    $alumno = $request->user();
+    return response()->json([
+      'student' => $this->alumnoPayload($request->user()),
+    ]);
+  }
 
-    return response()->json(['student' => [
+  private function alumnoPayload(Alumno $alumno): array
+  {
+    return [
       'id' => (string) $alumno->getKey(),
       'matricula' => (string) $alumno->numestudiante,
       'name' => (string) $alumno->nombre,
-      'program' => '',
-      'semester' => 0,
-      'email' => '',
+      'program' => (string) ($alumno->licenciatura ?? ''),
+      'semester' => (int) ($alumno->semestre ?? 0),
+      'email' => (string) ($alumno->correoinstitucional ?? ''),
+      'group' => (string) ($alumno->grupo ?? ''),
       'campus' => '',
-    ]]);
+    ];
   }
 
   public function logoutAlumnoApi(Request $request)
