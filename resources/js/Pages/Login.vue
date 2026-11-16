@@ -122,7 +122,7 @@
             </q-tab-panels>
           </q-card>
           <div class="text-center text-white q-mt-md">
-            <span class="text-caption">{{ appName }} · v{{ frontendVersion }}</span>
+            <span class="text-caption">App Version {{ appVersion }}</span>
           </div>
         </div>
         <div class="col-4"></div>
@@ -135,7 +135,7 @@
 <script>
 import { notify } from "../Utils/notify.js";
 import { loading } from "../Utils/loading.js";
-import { APP_NAME, FRONTEND_VERSION } from "../constants.js";
+import { APP_VERSION } from "../constants.js";
 export default {
   data() {
     return {
@@ -149,11 +149,8 @@ export default {
     };
   },
   computed: {
-    appName() {
-      return APP_NAME;
-    },
-    frontendVersion() {
-      return FRONTEND_VERSION;
+    appVersion() {
+      return APP_VERSION;
     },
   },
   created() {

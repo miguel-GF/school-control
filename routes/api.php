@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => response()->json([
   'name' => config('app.name').' API',
   'type' => 'api',
-  'version' => config('app.api_version'),
+  'api_version' => config('app.api_version'),
   'laravel' => app()->version(),
   'php' => PHP_VERSION,
   'environment' => app()->environment(),
@@ -47,7 +47,7 @@ Route::prefix('v1/mobile')->group(function () {
   Route::get('/health', fn () => response()->json([
     'ok' => true,
     'service' => 'school-control-mobile',
-    'version' => config('app.api_version'),
+    'api_version' => config('app.api_version'),
   ]));
   Route::post('/auth/login', [AuthController::class, 'loginAlumnoApi'])->middleware('throttle:10,1');
   Route::post('/payments/stripe/webhook', [MobilePaymentController::class, 'webhook']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentAttempt;
 use App\Models\PaymentCustomer;
+use App\Models\PaymentMethod;
 use App\Models\SchoolPayment;
 use App\Payments\PaymentGatewayStrategy;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,11 @@ class MobilePaymentController extends Controller
         ]);
     }
 
+    /**
+     * @deprecated La app Flutter ya no usa SetupIntent para guardar tarjetas:
+     * Stripe puede rechazar el alta por saldo al confirmarlo. Se conserva por
+     * compatibilidad con clientes viejos.
+     */
     public function crearSetupIntent(Request $request): JsonResponse
     {
         $customer = $this->customerFor($request);
@@ -38,25 +44,21 @@ class MobilePaymentController extends Controller
 
     public function listarTarjetas(Request $request): JsonResponse
     {
-        $customer = PaymentCustomer::where('alumno_id', $request->user()->getKey())
-            ->where('gateway', config('payments.gateway'))->first();
+        $alumnoId = $request->user()->getKey();
+        $gatewayName = config('payments.gateway');
+        $customer = PaymentCustomer::where('alumno_id', $alumnoId)
+            ->where('gateway', $gatewayName)->first();
 
-        if (!$customer) {
-            return response()->json(['data' => []]);
+        if ($customer) {
+            $this->syncAttachedCards($customer);
         }
 
-        $cards = collect($this->gateway()->listPaymentMethods($customer->provider_customer_id))
-            ->map(function ($method) {
-                $card = $method->card;
-
-                return [
-                    'id' => $method->id,
-                    'brand' => $card->brand,
-                    'last4' => $card->last4,
-                    'exp_month' => $card->exp_month,
-                    'exp_year' => $card->exp_year,
-                ];
-            })->values();
+        $cards = PaymentMethod::where('alumno_id', $alumnoId)
+            ->where('gateway', $gatewayName)
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn (PaymentMethod $method) => $this->cardResponse($method))
+            ->values();
 
         return response()->json(['data' => $cards]);
     }
@@ -67,35 +69,67 @@ class MobilePaymentController extends Controller
             'payment_method_id' => ['required', 'string', 'starts_with:pm_'],
         ]);
         $customer = $this->customerFor($request);
-        $method = $this->gateway()->attachPaymentMethod(
-            $customer->provider_customer_id,
-            $validated['payment_method_id']
-        );
-        $card = $method['card'] ?? [];
 
-        return response()->json([
-            'data' => [
-                'id' => $method['id'],
-                'brand' => $card['brand'] ?? 'unknown',
-                'last4' => $card['last4'] ?? '',
-                'exp_month' => $card['exp_month'] ?? null,
-                'exp_year' => $card['exp_year'] ?? null,
-            ],
-        ], 201);
+        try {
+            $method = $this->gateway()->retrievePaymentMethod($validated['payment_method_id']);
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo recuperar el método de pago', [
+                'alumno_id' => $request->user()->getKey(),
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'La tarjeta no es válida o ya no está disponible.',
+            ], 422);
+        }
+
+        $card = $method['card'] ?? null;
+        if (!is_array($card) || $card === []) {
+            return response()->json(['message' => 'El método de pago no es una tarjeta.'], 422);
+        }
+
+        $owner = $method['customer'] ?? null;
+        if ($owner && $owner !== $customer->provider_customer_id) {
+            return response()->json(['message' => 'La tarjeta no pertenece a este alumno.'], 409);
+        }
+
+        if ($this->expired($card)) {
+            return response()->json(['message' => 'La tarjeta está vencida.'], 422);
+        }
+
+        // No se adjunta la tarjeta al customer en el alta: Stripe verifica la
+        // tarjeta al adjuntarla y puede rechazarla por saldo. Se guarda como
+        // pendiente y Stripe la adjunta sola cuando el primer pago sea exitoso.
+        $saved = $this->saveCard($customer, $method, $owner === $customer->provider_customer_id);
+
+        return response()->json(['data' => $this->cardResponse($saved)], 201);
     }
 
     public function eliminarTarjeta(Request $request, string $paymentMethodId): JsonResponse
     {
-        $customer = PaymentCustomer::where('alumno_id', $request->user()->getKey())
-            ->where('gateway', config('payments.gateway'))->firstOrFail();
-        $owned = collect($this->gateway()->listPaymentMethods($customer->provider_customer_id))
-            ->contains(fn ($method) => $method->id === $paymentMethodId);
+        $alumnoId = $request->user()->getKey();
+        $gatewayName = config('payments.gateway');
+        $customer = PaymentCustomer::where('alumno_id', $alumnoId)
+            ->where('gateway', $gatewayName)->first();
+        $local = PaymentMethod::where('alumno_id', $alumnoId)
+            ->where('gateway', $gatewayName)
+            ->where('provider_payment_method_id', $paymentMethodId)
+            ->first();
 
-        if (!$owned) {
+        $attached = false;
+        if ($customer) {
+            $attached = collect($this->gateway()->listPaymentMethods($customer->provider_customer_id))
+                ->contains(fn ($method) => ($method['id'] ?? null) === $paymentMethodId);
+        }
+
+        if (!$local && !$attached) {
             return response()->json(['message' => 'Tarjeta no encontrada.'], 404);
         }
 
-        $this->gateway()->detachPaymentMethod($paymentMethodId);
+        if ($attached) {
+            $this->gateway()->detachPaymentMethod($paymentMethodId);
+        }
+        $local?->delete();
 
         return response()->json(['message' => 'Tarjeta eliminada.']);
     }
@@ -237,6 +271,64 @@ class MobilePaymentController extends Controller
         return app(PaymentGatewayStrategy::class);
     }
 
+    private function syncAttachedCards(PaymentCustomer $customer): void
+    {
+        try {
+            foreach ($this->gateway()->listPaymentMethods($customer->provider_customer_id) as $method) {
+                $this->saveCard($customer, $method, true);
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudieron sincronizar las tarjetas del customer', [
+                'alumno_id' => $customer->alumno_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function saveCard(PaymentCustomer $customer, array $method, bool $attached): PaymentMethod
+    {
+        $card = $method['card'] ?? [];
+
+        return PaymentMethod::updateOrCreate(
+            [
+                'alumno_id' => $customer->alumno_id,
+                'gateway' => $customer->gateway,
+                'provider_payment_method_id' => $method['id'],
+            ],
+            [
+                'brand' => $card['brand'] ?? 'unknown',
+                'last4' => $card['last4'] ?? '',
+                'exp_month' => $card['exp_month'] ?? null,
+                'exp_year' => $card['exp_year'] ?? null,
+                'attached' => $attached,
+            ]
+        );
+    }
+
+    private function cardResponse(PaymentMethod $method): array
+    {
+        return [
+            'id' => $method->provider_payment_method_id,
+            'brand' => $method->brand,
+            'last4' => $method->last4,
+            'exp_month' => $method->exp_month,
+            'exp_year' => $method->exp_year,
+        ];
+    }
+
+    private function expired(array $card): bool
+    {
+        $month = (int) ($card['exp_month'] ?? 0);
+        $year = (int) ($card['exp_year'] ?? 0);
+        if ($month < 1 || $month > 12 || $year < 1) {
+            return true;
+        }
+
+        $now = now();
+
+        return $year < $now->year || ($year === $now->year && $month < $now->month);
+    }
+
     private function syncStatus(SchoolPayment $payment, string $providerStatus, ?string $failureCode = null, ?string $paymentMethodId = null): void
     {
         $status = match ($providerStatus) {
@@ -248,6 +340,12 @@ class MobilePaymentController extends Controller
         $payment->status = $status;
         if ($paymentMethodId) {
             $payment->payment_method = 'card';
+            if ($status === 'paid') {
+                PaymentMethod::where('alumno_id', $payment->alumno_id)
+                    ->where('gateway', $payment->gateway)
+                    ->where('provider_payment_method_id', $paymentMethodId)
+                    ->update(['attached' => true]);
+            }
         }
         if ($status === 'paid' && !$payment->paid_at) {
             $payment->paid_at = now();
@@ -260,8 +358,8 @@ class MobilePaymentController extends Controller
                 $metadata['provider_payment_method_id'] = $paymentMethodId;
             }
             $attempt->update([
-            'status' => $providerStatus,
-            'failure_code' => $failureCode,
+                'status' => $providerStatus,
+                'failure_code' => $failureCode,
                 'metadata' => $metadata,
             ]);
         }

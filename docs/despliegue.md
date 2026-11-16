@@ -171,7 +171,7 @@ Debe devolver JSON:
 {
   "name": "Laravel API",
   "type": "api",
-  "version": "1.1.0",
+  "api_version": "1.1.0",
   "laravel": "13.42.0",
   "php": "8.4.27",
   "environment": "production"
@@ -190,7 +190,7 @@ Debe devolver:
 {
   "ok": true,
   "service": "school-control-mobile",
-  "version": "1.1.0"
+  "api_version": "1.1.0"
 }
 ```
 
@@ -199,7 +199,7 @@ Debe devolver:
 La pantalla de login debe mostrar abajo:
 
 ```text
-Laravel · v1.1.0
+App Version 1.1.0
 ```
 
 ### 6.4 Código fuente
@@ -243,6 +243,30 @@ resources/js/Components/TheDialogConfirm.vue
 resources/js/Components/TheDialogResponse.vue
 ```
 
+### Si se actualiza el flujo de tarjetas
+
+Subir también:
+
+```text
+app/Http/Controllers/MobilePaymentController.php
+app/Payments/PaymentGatewayStrategy.php
+app/Payments/StripePaymentStrategy.php
+app/Models/PaymentMethod.php
+database/migrations/2026_11_16_000000_create_payment_methods_table.php
+database/sql/2026_11_16_000000_create_payment_methods_table.sql
+```
+
+Después ejecutar la migración:
+
+```bash
+php artisan migrate --path=database/migrations/2026_11_16_000000_create_payment_methods_table.php --force
+```
+
+O, si no hay SSH, ejecutar el contenido de
+`database/sql/2026_11_16_000000_create_payment_methods_table.sql` en la base
+de datos del servidor. Sin la tabla `payment_methods`, el alta de tarjetas
+falla.
+
 ### Archivos generados
 
 ```text
@@ -255,7 +279,7 @@ vendor/             ← completo, o ejecutar composer install en el servidor
 ### Variables en el `.env` del servidor
 
 ```env
-FRONTEND_VERSION=1.1.0
+APP_VERSION=1.1.0
 API_VERSION=1.1.0
 ```
 
@@ -321,7 +345,7 @@ php artisan optimize
 | Frontend en blanco y error `reading 'component'` | Vista Blade compilada vieja | Borrar `storage/framework/views/*.php` |
 | `/api` devuelve HTML en vez de JSON | `routes/api.php` viejo o ruta cacheada | Subir `routes/api.php` y borrar `bootstrap/cache/routes-*.php` |
 | Cambias `API_VERSION` y no se refleja | Configuración cacheada | `php artisan config:clear` o `php artisan optimize` |
-| Cambias `FRONTEND_VERSION` y no se refleja | El frontend ya está compilado | Volver a ejecutar `npm run build` |
+| Cambias `APP_VERSION` y no se refleja | El frontend ya está compilado | Volver a ejecutar `npm run build` |
 | El navegador sigue mostrando lo viejo | Caché del navegador u OPcache | `Ctrl + Shift + R` y limpiar OPcache |
 | Se intenta cargar `http://localhost:5173` en producción | Existe `public/hot` | Borrar `public/hot` del servidor |
 
@@ -329,7 +353,7 @@ php artisan optimize
 
 ## 10. Versiones independientes
 
-- **Frontend:** `FRONTEND_VERSION` en `.env`, se inyecta al compilar con `npm run build` y se muestra en el login.
+- **App (frontend):** `APP_VERSION` en `.env`, se inyecta al compilar con `npm run build` y se muestra en el login.
 - **API:** `API_VERSION` en `.env`, se lee en tiempo de ejecución y se expone en `GET /api`.
 
 Puedes subir una sin la otra.

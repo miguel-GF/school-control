@@ -3,7 +3,7 @@
 Documentación del esquema de pagos móviles de School Control.
 
 - Base de datos: `escolarprueba`
-- Migración: `database/migrations/2026_11_11_000000_create_school_payment_tables.php`
+- Migraciones: `database/migrations/2026_11_11_000000_create_school_payment_tables.php` y `database/migrations/2026_11_16_000000_create_payment_methods_table.php`
 - Pasarela actual: `stripe`
 - Moneda de la demo: `mxn`
 - Monto de la demo: `1000` centavos (`$10.00 MXN`)
@@ -14,6 +14,7 @@ Documentación del esquema de pagos móviles de School Control.
 erDiagram
     alumnos ||--o{ payments : "alumno_id"
     alumnos ||--o{ payment_customers : "alumno_id"
+    alumnos ||--o{ payment_methods : "alumno_id"
     payments ||--o{ payment_attempts : "payment_id"
 ```
 
@@ -62,6 +63,33 @@ Un registro por alumno y pasarela. Guarda el customer de Stripe.
 - `UNIQUE (alumno_id, gateway)` — un customer por alumno y pasarela
 - `UNIQUE (gateway, provider_customer_id)`
 
+## `payment_methods` — tarjetas guardadas del alumno
+
+Una fila por tarjeta registrada desde la app. La tarjeta puede existir aquí
+antes de estar adjunta al customer de Stripe: el alta no la adjunta para no
+disparar la verificación de saldo de Stripe. Se marca `attached = 1` cuando
+Stripe la adjunta tras un pago exitoso.
+
+| Campo | Tipo | Nulo | Clave | Notas |
+|---|---|---|---|---|
+| `id` | `bigint unsigned` | No | PK | Auto-incremental |
+| `alumno_id` | `bigint unsigned` | No | índice | Referencia a `alumnos.idalumnos` |
+| `gateway` | `varchar(32)` | No | | `stripe` |
+| `provider_payment_method_id` | `varchar(255)` | No | único compuesto | ID del PaymentMethod (`pm_...`) |
+| `brand` | `varchar(32)` | No | | `visa`, `mastercard`, etc. |
+| `last4` | `varchar(4)` | No | | Últimos 4 dígitos |
+| `exp_month` | `tinyint unsigned` | Sí | | Mes de vencimiento |
+| `exp_year` | `smallint unsigned` | Sí | | Año de vencimiento |
+| `attached` | `boolean` | No | | `0` pendiente, `1` adjunta al customer |
+| `created_at` | `timestamp` | Sí | | Auditoría |
+| `updated_at` | `timestamp` | Sí | | Auditoría |
+
+Índices:
+
+- `PRIMARY (id)`
+- `UNIQUE (alumno_id, gateway, provider_payment_method_id)`
+- `INDEX (alumno_id)`
+
 ## `payment_attempts` — intentos y datos específicos de Stripe
 
 Cada intento de pago con su estado crudo de Stripe y metadata.
@@ -90,6 +118,7 @@ Cada intento de pago con su estado crudo de Stripe y metadata.
 
 - `payments.alumno_id` → `alumnos.idalumnos`
 - `payment_customers.alumno_id` → `alumnos.idalumnos`
+- `payment_methods.alumno_id` → `alumnos.idalumnos`
 - `payment_attempts.payment_id` → `payments.id`
 
 ## Estados
@@ -111,8 +140,10 @@ Cada intento de pago con su estado crudo de Stripe y metadata.
 - `POST /api/v1/mobile/payments/{id}/confirm` sincroniza el estado con Stripe.
 - `GET /api/v1/mobile/payments` devuelve la tabla principal.
 - La app solo muestra registros con `status = 'paid'`; los `failed` quedan como bitácora y no aparecen en el historial.
-- `POST /api/v1/mobile/payment-methods` adjunta una tarjeta tokenizada al customer sin validar saldo.
-- `GET /api/v1/mobile/payment-methods` lista las tarjetas del customer.
+- `POST /api/v1/mobile/payment-methods` registra una tarjeta tokenizada en `payment_methods` **sin adjuntarla al customer de Stripe**. No cobra ni valida saldo; solo rechaza datos inválidos o una tarjeta vencida. Esto evita que la verificación de Stripe al adjuntar rechace tarjetas sin fondos.
+- `GET /api/v1/mobile/payment-methods` lista las tarjetas de `payment_methods` y sincroniza las que ya estén adjuntas en Stripe.
+- Al confirmar el primer pago con una tarjeta pendiente, Stripe la adjunta al customer automáticamente y se marca `attached = 1`.
+- `POST /api/v1/mobile/payment-methods/setup-intent` es legado; la app Flutter no lo usa.
 
 ## Nota sobre `alumnos`
 

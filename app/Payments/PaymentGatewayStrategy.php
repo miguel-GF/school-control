@@ -16,6 +16,13 @@ interface PaymentGatewayStrategy
 
     public function listPaymentMethods(string $customerId): array;
 
+    public function retrievePaymentMethod(string $paymentMethodId): array;
+
+    /**
+     * @deprecated No usar al guardar una tarjeta: Stripe verifica la tarjeta
+     * al adjuntarla y puede rechazarla por saldo. El alta debe guardarla como
+     * pendiente y dejar que Stripe la adjunte tras un pago exitoso.
+     */
     public function attachPaymentMethod(string $customerId, string $paymentMethodId): array;
 
     public function detachPaymentMethod(string $paymentMethodId): void;

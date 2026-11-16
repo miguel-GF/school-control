@@ -68,9 +68,20 @@ class StripePaymentStrategy implements PaymentGatewayStrategy
 
     public function listPaymentMethods(string $customerId): array
     {
-        return $this->stripe->paymentMethods->all(['customer' => $customerId, 'type' => 'card'])->data;
+        $methods = $this->stripe->paymentMethods->all(['customer' => $customerId, 'type' => 'card'])->data;
+
+        return array_map(fn ($method) => $method->toArray(), $methods);
     }
 
+    public function retrievePaymentMethod(string $paymentMethodId): array
+    {
+        return $this->stripe->paymentMethods->retrieve($paymentMethodId, [])->toArray();
+    }
+
+    /**
+     * @deprecated No usar al guardar una tarjeta: Stripe verifica la tarjeta
+     * al adjuntarla y puede rechazarla por saldo.
+     */
     public function attachPaymentMethod(string $customerId, string $paymentMethodId): array
     {
         $method = $this->stripe->paymentMethods->attach($paymentMethodId, [
