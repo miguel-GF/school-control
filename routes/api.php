@@ -58,6 +58,7 @@ Route::prefix('v1/mobile')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
       Route::get('/me', [AuthController::class, 'alumnoActual']);
       Route::post('/auth/logout', [AuthController::class, 'logoutAlumnoApi']);
+      Route::post('/auth/verify-password', [AuthController::class, 'verificarPasswordAlumno'])->middleware('throttle:10,1');
       Route::get('/calificaciones', [MobileGradeController::class, 'index'])->middleware('throttle:60,1');
       Route::get('/payment-config', [MobilePaymentController::class, 'configuracion']);
       Route::post('/payment-methods/setup-intent', [MobilePaymentController::class, 'crearSetupIntent']);

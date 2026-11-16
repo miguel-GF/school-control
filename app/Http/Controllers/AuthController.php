@@ -37,6 +37,21 @@ class AuthController extends Controller
     ]);
   }
 
+  public function verificarPasswordAlumno(Request $request)
+  {
+    $datos = $request->validate([
+      'password' => ['required', 'string', 'max:255'],
+    ]);
+
+    $alumno = $request->user();
+
+    if (!hash_equals((string) $alumno->contrasena, $datos['password'])) {
+      return response()->json(['message' => 'Contraseña incorrecta.'], 422);
+    }
+
+    return response()->json(['ok' => true]);
+  }
+
   public function alumnoActual(Request $request)
   {
     $alumno = $request->user();
