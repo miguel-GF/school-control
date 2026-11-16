@@ -17,6 +17,7 @@ class AlumnoRepoData
   {
     $query = DB::table('Calificaciones as c')
       ->select(
+        'c.idcalificaciones',
         'c.numestudiante',
         'c.cvemat',
         'c.materia',
