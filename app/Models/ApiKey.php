@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApiKey extends Model
 {
-  use HasFactory;
-  protected $table = 'api_keys';
-  protected $primaryKey = 'api_key_id';
+    use HasFactory;
+
+    protected $table = 'api_keys';
+    protected $primaryKey = 'api_key_id';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'key', 'key_hash', 'flavor', 'descripcion', 'status',
+    ];
 }

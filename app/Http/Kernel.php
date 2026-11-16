@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'alumno' => \App\Http\Middleware\AlumnoMiddleware::class,
         'login' => \App\Http\Middleware\LoginMiddleware::class,
         'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class,
+        'mobile.app-key' => \App\Http\Middleware\MobileApiKeyMiddleware::class,
     ];
 }

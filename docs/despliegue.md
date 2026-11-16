@@ -267,6 +267,72 @@ O, si no hay SSH, ejecutar el contenido de
 de datos del servidor. Sin la tabla `payment_methods`, el alta de tarjetas
 falla.
 
+### API key de la app móvil
+
+La API móvil exige el header `X-App-Key` en login y rutas autenticadas. No se
+aplica a `/api/v1/mobile/health` ni al webhook de Stripe.
+
+Subir también:
+
+```text
+app/Http/Middleware/MobileApiKeyMiddleware.php
+app/Console/Commands/GenerateMobileApiKey.php
+app/Models/ApiKey.php
+app/Http/Kernel.php
+routes/api.php
+database/migrations/2026_11_16_000001_add_mobile_key_fields_to_api_keys_table.php
+database/sql/2026_11_16_000001_add_mobile_key_fields_to_api_keys_table.sql
+```
+
+1. Subir y ejecutar la migración:
+
+```bash
+php artisan migrate --path=database/migrations/2026_11_16_000001_add_mobile_key_fields_to_api_keys_table.php --force
+```
+
+Si no hay SSH, ejecutar el contenido de
+`database/sql/2026_11_16_000001_add_mobile_key_fields_to_api_keys_table.sql`
+en la base de datos del servidor.
+
+2. Generar una key por flavor:
+
+```bash
+php artisan mobile:key ipes --description="IPES productivo"
+php artisan mobile:key demo --description="IPES demo"
+php artisan mobile:key valle --description="Valle"
+```
+
+El comando imprime la key una sola vez. Guárdala en el lugar seguro del build.
+
+3. Compilar la app con su key:
+
+```bash
+fvm flutter build apk --release --flavor ipes \
+  --dart-define=IPES_API_URL=https://escuela.rtsys.mx \
+  --dart-define=IPES_APP_KEY=<key-de-ipes>
+```
+
+Si todavía hay APK instalados sin la key, se puede hacer una transición sin
+romperlos:
+
+```env
+MOBILE_APP_KEY_ENFORCED=false
+```
+
+Después de instalar el APK nuevo, cambiar a `true` y limpiar configuración:
+
+```bash
+php artisan config:clear
+```
+
+Si rotas una key, genera una nueva, publica el APK con la nueva key y desactiva
+la anterior en `api_keys` cuando ya no se use. Un APK viejo dejará de funcionar
+al desactivar su key. Para revocar sin borrar el registro:
+
+```sql
+UPDATE api_keys SET status = 'Inactivo' WHERE api_key_id = <id>;
+```
+
 ### Archivos generados
 
 ```text

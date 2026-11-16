@@ -136,6 +136,7 @@ Cada intento de pago con su estado crudo de Stripe y metadata.
 
 ## Uso desde la API móvil
 
+- Login y rutas autenticadas requieren `X-App-Key` además del token Sanctum. La key se genera por flavor con `php artisan mobile:key <flavor>`. `/health` y el webhook de Stripe no la piden.
 - `POST /api/v1/mobile/payments` crea la fila en `payments` y el PaymentIntent.
 - `POST /api/v1/mobile/payments/{id}/confirm` sincroniza el estado con Stripe.
 - `GET /api/v1/mobile/payments` devuelve la tabla principal.

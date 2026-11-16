@@ -50,21 +50,24 @@ Route::prefix('v1/mobile')->group(function () {
     'service' => 'school-control-mobile',
     'api_version' => config('app.api_version'),
   ]));
-  Route::post('/auth/login', [AuthController::class, 'loginAlumnoApi'])->middleware('throttle:10,1');
   Route::post('/payments/stripe/webhook', [MobilePaymentController::class, 'webhook']);
 
-  Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me', [AuthController::class, 'alumnoActual']);
-    Route::post('/auth/logout', [AuthController::class, 'logoutAlumnoApi']);
-    Route::get('/calificaciones', [MobileGradeController::class, 'index']);
-    Route::get('/payment-config', [MobilePaymentController::class, 'configuracion']);
-    Route::post('/payment-methods/setup-intent', [MobilePaymentController::class, 'crearSetupIntent']);
-    Route::post('/payment-methods', [MobilePaymentController::class, 'adjuntarTarjeta']);
-    Route::get('/payment-methods', [MobilePaymentController::class, 'listarTarjetas']);
-    Route::delete('/payment-methods/{paymentMethodId}', [MobilePaymentController::class, 'eliminarTarjeta']);
-    Route::post('/payments', [MobilePaymentController::class, 'crearPago'])->middleware('throttle:20,1');
-    Route::post('/payments/{paymentIntentId}/confirm', [MobilePaymentController::class, 'confirmarPago']);
-    Route::get('/payments', [MobilePaymentController::class, 'listarPagos']);
+  Route::middleware('mobile.app-key')->group(function () {
+    Route::post('/auth/login', [AuthController::class, 'loginAlumnoApi'])->middleware('throttle:10,1');
+
+    Route::middleware('auth:sanctum')->group(function () {
+      Route::get('/me', [AuthController::class, 'alumnoActual']);
+      Route::post('/auth/logout', [AuthController::class, 'logoutAlumnoApi']);
+      Route::get('/calificaciones', [MobileGradeController::class, 'index'])->middleware('throttle:60,1');
+      Route::get('/payment-config', [MobilePaymentController::class, 'configuracion']);
+      Route::post('/payment-methods/setup-intent', [MobilePaymentController::class, 'crearSetupIntent']);
+      Route::post('/payment-methods', [MobilePaymentController::class, 'adjuntarTarjeta']);
+      Route::get('/payment-methods', [MobilePaymentController::class, 'listarTarjetas']);
+      Route::delete('/payment-methods/{paymentMethodId}', [MobilePaymentController::class, 'eliminarTarjeta']);
+      Route::post('/payments', [MobilePaymentController::class, 'crearPago'])->middleware('throttle:20,1');
+      Route::post('/payments/{paymentIntentId}/confirm', [MobilePaymentController::class, 'confirmarPago']);
+      Route::get('/payments', [MobilePaymentController::class, 'listarPagos']);
+    });
   });
 });
 

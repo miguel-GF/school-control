@@ -38,4 +38,10 @@ return [
         'api_version' => env('STRIPE_API_VERSION'),
     ],
 
+    'mobile' => [
+        // Permite desactivar temporalmente la exigencia de X-App-Key durante
+        // una transición de APK. En producción debe quedar en true.
+        'app_key_enforced' => env('MOBILE_APP_KEY_ENFORCED', true),
+    ],
+
 ];

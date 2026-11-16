@@ -4,8 +4,9 @@ Endpoint para que la app del alumno consulte sus calificaciones usando el token 
 
 ## `GET /api/v1/mobile/calificaciones`
 
-- Autenticación: `Authorization: Bearer <token>`
+- Autenticación: `Authorization: Bearer <token>` + `X-App-Key: <key-del-flavor>`
 - La matrícula se toma del alumno autenticado; no se recibe por query ni por body.
+- La key se genera con `php artisan mobile:key <flavor>` y se configura en el build de la app.
 - Query opcional: `periodo` para filtrar un periodo exacto.
 
 ### Respuesta
