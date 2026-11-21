@@ -69,38 +69,38 @@ class DocenteBO
   public static function armarInsertCV($datos)
   {
     $insert = [];
-    $insert['nombre'] = $datos['nombre'] ? strtoupper($datos['nombre']) : null;
+    $insert['nombre'] = !empty($datos['nombre']) ? strtoupper($datos['nombre']) : null;
     $insert['fecha_nacimiento'] = $datos['fechaNacimiento'] ?? null;
-    $insert['ciudad'] = $datos['ciudad'] ? strtoupper($datos['ciudad']) : null;
-    $insert['estado'] = $datos['estado'] ? strtoupper($datos['estado']) : null;
-    $insert['pais'] = $datos['pais'] ? strtoupper($datos['pais']) : null;
+    $insert['ciudad'] = !empty($datos['ciudad']) ? strtoupper($datos['ciudad']) : null;
+    $insert['estado'] = !empty($datos['estado']) ? strtoupper($datos['estado']) : null;
+    $insert['pais'] = !empty($datos['pais']) ? strtoupper($datos['pais']) : null;
     $insert['estado_civil'] = $datos['estadoCivil'] ?? null;
     $insert['genero'] = $datos['genero'] ?? null;
     $insert['correo_electronico'] = $datos['correo'] ?? null;
     $insert['correo_institucional'] = $datos['correoInstitucional'] ?? null;
-    $insert['numero_celular'] = $datos['celular'] ?? null;
+    $insert['numero_celular'] = !empty($datos['celular']) ? preg_replace('/\D+/', '', $datos['celular']) : null;
     $insert['facebook'] = $datos['facebook'] ?? null;
     $insert['numero_casa'] = $datos['telefono'] ?? null;
     // DOMICILIO
-    $insert['domicilio_calle'] = $datos['domicilioCalle'] ? strtoupper($datos['domicilioCalle']) : null;
+    $insert['domicilio_calle'] = !empty($datos['domicilioCalle']) ? strtoupper($datos['domicilioCalle']) : null;
     $insert['domicilio_no_exterior'] = $datos['domicilioNoExterior'] ?? null;
     $insert['domicilio_no_interior'] = $datos['domicilioNoInterior'] ?? null;
-    $insert['domicilio_colonia'] = $datos['domicilioColonia'] ? strtoupper($datos['domicilioColonia']) : null;
-    $insert['domicilio_ciudad'] = $datos['domicilioCiudad'] ? strtoupper($datos['domicilioCiudad']) : null;
-    $insert['domicilio_estado'] = $datos['domicilioEstado'] ? strtoupper($datos['domicilioEstado']) : null;
-    $insert['domicilio_codigo_postal'] = $datos['domicilioCodigoPostal'];
+    $insert['domicilio_colonia'] = !empty($datos['domicilioColonia']) ? strtoupper($datos['domicilioColonia']) : null;
+    $insert['domicilio_ciudad'] = !empty($datos['domicilioCiudad']) ? strtoupper($datos['domicilioCiudad']) : null;
+    $insert['domicilio_estado'] = !empty($datos['domicilioEstado']) ? strtoupper($datos['domicilioEstado']) : null;
+    $insert['domicilio_codigo_postal'] = $datos['domicilioCodigoPostal'] ?? null;
     // DATOS FISCALES
-    $insert['dato_fiscal_rfc'] = $datos['rfc'] ? strtoupper($datos['rfc']) : null;
-    $insert['dato_fiscal_curp'] = $datos['curp'] ? strtoupper($datos['curp']) : null;
-    $insert['dato_fiscal_clabe'] = $datos['clabe'] ? strtoupper($datos['clabe']) : null;
-    $insert['dato_fiscal_banco'] = $datos['banco'] ? strtoupper($datos['banco']) : null;
+    $insert['dato_fiscal_rfc'] = !empty($datos['rfc']) ? strtoupper($datos['rfc']) : null;
+    $insert['dato_fiscal_curp'] = !empty($datos['curp']) ? strtoupper($datos['curp']) : null;
+    $insert['dato_fiscal_clabe'] = !empty($datos['clabe']) ? strtoupper($datos['clabe']) : null;
+    $insert['dato_fiscal_banco'] = !empty($datos['banco']) ? strtoupper($datos['banco']) : null;
     // DOMICILIO FISCAL
-    $insert['dato_fiscal_calle'] = $datos['fiscalCalle'] ? strtoupper($datos['fiscalCalle']) : null;
+    $insert['dato_fiscal_calle'] = !empty($datos['fiscalCalle']) ? strtoupper($datos['fiscalCalle']) : null;
     $insert['dato_fiscal_no_exterior'] = $datos['fiscalNoExterior'] ?? null;
     $insert['dato_fiscal_no_interior'] = $datos['fiscalNoInterior'] ?? null;
-    $insert['dato_fiscal_colonia'] = $datos['fiscalColonia'] ? strtoupper($datos['fiscalColonia']) : null;
-    $insert['dato_fiscal_ciudad'] = $datos['fiscalCiudad'] ? strtoupper($datos['fiscalCiudad']) : null;
-    $insert['dato_fiscal_estado'] = $datos['fiscalEstado'] ? strtoupper($datos['fiscalEstado']) : null;
+    $insert['dato_fiscal_colonia'] = !empty($datos['fiscalColonia']) ? strtoupper($datos['fiscalColonia']) : null;
+    $insert['dato_fiscal_ciudad'] = !empty($datos['fiscalCiudad']) ? strtoupper($datos['fiscalCiudad']) : null;
+    $insert['dato_fiscal_estado'] = !empty($datos['fiscalEstado']) ? strtoupper($datos['fiscalEstado']) : null;
     $insert['dato_fiscal_codigo_postal'] = $datos['fiscalCodigoPostal'] ?? null;
     // PORCENTAJE INGRESOS
     $insert['porcentaje_actividad_profesional'] = $datos['porcentajeActividadProf'] ?? 0;
@@ -108,13 +108,79 @@ class DocenteBO
     $insert['porcentaje_pensionado'] = $datos['porcentajePensionado'] ?? 0;
     $insert['porcentaje_docencia'] = $datos['porcentajeDocencia'] ?? 0;
     // INFORMACION COMPLEMENTARIA
-    $insert['enfermedades'] = $datos['enfermedades'] ? strtoupper($datos['enfermedades']) : null;
-    $insert['alergias'] = $datos['alergias'] ? strtoupper($datos['alergias']) : null;
+    $insert['enfermedades'] = !empty($datos['enfermedades']) ? strtoupper($datos['enfermedades']) : null;
+    $insert['alergias'] = !empty($datos['alergias']) ? strtoupper($datos['alergias']) : null;
     $insert['tipo_sangre'] = $datos['tipoSangre'] ?? null;
-    $insert['comentarios'] = $datos['informacionAdicional'] ? strtoupper($datos['informacionAdicional']) : null;
+    $insert['comentarios'] = !empty($datos['informacionAdicional']) ? strtoupper($datos['informacionAdicional']) : null;
     $insert['registro_fecha'] = now()->format('Y-m-d H:i:s');
 
     return $insert;
+  }
+
+  /**
+   * armarUpdateCV
+   * Solo actualiza los campos que vienen en la peticion para no borrar
+   * informacion cuando se guarda un avance parcial.
+   *
+   * @param  mixed $datos
+   * @return array
+   */
+  public static function armarUpdateCV($datos)
+  {
+    $insert = self::armarInsertCV($datos);
+
+    $mapa = [
+      'nombre' => 'nombre',
+      'fecha_nacimiento' => 'fechaNacimiento',
+      'ciudad' => 'ciudad',
+      'estado' => 'estado',
+      'pais' => 'pais',
+      'estado_civil' => 'estadoCivil',
+      'genero' => 'genero',
+      'correo_electronico' => 'correo',
+      'correo_institucional' => 'correoInstitucional',
+      'numero_celular' => 'celular',
+      'facebook' => 'facebook',
+      'numero_casa' => 'telefono',
+      'domicilio_calle' => 'domicilioCalle',
+      'domicilio_no_exterior' => 'domicilioNoExterior',
+      'domicilio_no_interior' => 'domicilioNoInterior',
+      'domicilio_colonia' => 'domicilioColonia',
+      'domicilio_ciudad' => 'domicilioCiudad',
+      'domicilio_estado' => 'domicilioEstado',
+      'domicilio_codigo_postal' => 'domicilioCodigoPostal',
+      'dato_fiscal_rfc' => 'rfc',
+      'dato_fiscal_curp' => 'curp',
+      'dato_fiscal_clabe' => 'clabe',
+      'dato_fiscal_banco' => 'banco',
+      'dato_fiscal_calle' => 'fiscalCalle',
+      'dato_fiscal_no_exterior' => 'fiscalNoExterior',
+      'dato_fiscal_no_interior' => 'fiscalNoInterior',
+      'dato_fiscal_colonia' => 'fiscalColonia',
+      'dato_fiscal_ciudad' => 'fiscalCiudad',
+      'dato_fiscal_estado' => 'fiscalEstado',
+      'dato_fiscal_codigo_postal' => 'fiscalCodigoPostal',
+      'porcentaje_actividad_profesional' => 'porcentajeActividadProf',
+      'porcentaje_asalariado' => 'porcentajeAsalariado',
+      'porcentaje_pensionado' => 'porcentajePensionado',
+      'porcentaje_docencia' => 'porcentajeDocencia',
+      'enfermedades' => 'enfermedades',
+      'alergias' => 'alergias',
+      'tipo_sangre' => 'tipoSangre',
+      'comentarios' => 'informacionAdicional',
+    ];
+
+    $update = [];
+
+    foreach ($mapa as $columna => $campo) {
+      if (array_key_exists($campo, $datos)) {
+        $update[$columna] = $insert[$columna];
+      }
+    }
+
+    $update['actualizacion_fecha'] = now()->format('Y-m-d H:i:s');
+
+    return $update;
   }
 
   /**

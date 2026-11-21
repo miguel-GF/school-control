@@ -2,6 +2,7 @@
 
 namespace App\Repos\Actions;
 
+use App\Constants;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -90,6 +91,72 @@ class DocenteRepoAction
     try {
       DB::table('curriculum_docentes_archivos')
         ->insert($datos);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
+
+  /**
+   * Actualiza los datos principales de un curriculum.
+   *
+   * @param  array $datos
+   * @param  int $curriculumDocenteId
+   * @return void
+   */
+  public static function actualizarCurriculum(array $datos, $curriculumDocenteId)
+  {
+    try {
+      DB::table('curriculum_docentes')
+        ->where('curriculum_docente_id', $curriculumDocenteId)
+        ->update($datos);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
+
+  /**
+   * Da de baja los documentos activos de un tipo para reemplazarlos por uno nuevo.
+   *
+   * @param  int $curriculumDocenteId
+   * @param  string $tipo
+   * @param  string $status
+   * @return void
+   */
+  public static function actualizarStatusDocumentosPorTipo($curriculumDocenteId, string $tipo, string $status)
+  {
+    try {
+      DB::table('curriculum_docentes_archivos')
+        ->where('curriculum_docente_id', $curriculumDocenteId)
+        ->where('tipo', $tipo)
+        ->whereRaw("LOWER(COALESCE(status, 'activo')) <> ?", [strtolower(Constants::CV_STATUS_BAJA)])
+        ->update([
+          'status' => $status,
+          'actualizacion_fecha' => now()->format('Y-m-d H:i:s'),
+        ]);
+    } catch (QueryException $th) {
+      throw $th;
+    }
+  }
+
+  /**
+   * Actualiza la descripcion de los documentos activos de un tipo.
+   *
+   * @param  int $curriculumDocenteId
+   * @param  string $tipo
+   * @param  string|null $descripcion
+   * @return void
+   */
+  public static function actualizarDescripcionDocumentoPorTipo($curriculumDocenteId, string $tipo, $descripcion)
+  {
+    try {
+      DB::table('curriculum_docentes_archivos')
+        ->where('curriculum_docente_id', $curriculumDocenteId)
+        ->where('tipo', $tipo)
+        ->whereRaw("LOWER(COALESCE(status, 'activo')) <> ?", [strtolower(Constants::CV_STATUS_BAJA)])
+        ->update([
+          'descripcion' => $descripcion ? strtoupper($descripcion) : null,
+          'actualizacion_fecha' => now()->format('Y-m-d H:i:s'),
+        ]);
     } catch (QueryException $th) {
       throw $th;
     }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Constants;
-use App\Http\Requests\DocenteAgregarCVRequest;
+use App\Http\Requests\DocenteGuardarCVRequest;
 use App\Http\Requests\DocentePasarAsistenciaRequest;
 use App\Jobs\RecuperarArchivosCurriculums;
 use App\Models\CurriculumDocenteArchivo;
@@ -20,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use stdClass;
 
 class DocenteController extends Controller
 {
@@ -269,27 +268,107 @@ class DocenteController extends Controller
     ]);
   }
 
-  public function guardarCV(DocenteAgregarCVRequest $request)
+  /**
+   * Busca un expediente por numero de celular para saber si el docente
+   * ya tiene un curriculum en captura o ya lo envio a revision.
+   */
+  public function buscarPorCelular(Request $request)
   {
     try {
-      $datos = $request->all();
+      $request->validate([
+        'celular' => 'required|string|max:20',
+      ]);
 
-      DocenteServiceAction::guardarCV($datos);
+      $resultado = DocenteServiceAction::consultarCVPorCelular($request->input('celular'));
 
       return response([
-        'mensaje' => 'Curriculum guardado correctamente',
+        'mensaje' => $resultado['estado_captura'] === 'nuevo'
+          ? 'No se encontró un curriculum con ese número de celular.'
+          : 'Curriculum encontrado correctamente.',
+        'estado_captura' => $resultado['estado_captura'],
+        'curriculum' => $resultado['curriculum'],
+        'documentos' => $resultado['documentos'],
         'status' => 200,
       ]);
     } catch (\Illuminate\Validation\ValidationException $th) {
       return response([
         'mensaje' => $th->getMessage(),
-        'status' => 300
+        'status' => 422,
       ]);
     } catch (\Throwable $th) {
-      Log::error('Error al guardar curriculum' . $th);
+      Log::error('Error al buscar curriculum por celular: ' . $th->getMessage());
       return response([
-        'mensaje' => 'Error al guardar curriculum',
-        'status' => 300
+        'mensaje' => 'Error al buscar el curriculum.',
+        'status' => 300,
+      ]);
+    }
+  }
+
+  /**
+   * Crea o actualiza un curriculum (guardar avance).
+   * Si el celular ya existe, actualiza el expediente en lugar de duplicarlo.
+   */
+  public function guardarCV(DocenteGuardarCVRequest $request)
+  {
+    return $this->responderGuardadoCV($request);
+  }
+
+  /**
+   * Actualiza un curriculum existente.
+   */
+  public function actualizarCV(DocenteGuardarCVRequest $request, $id)
+  {
+    return $this->responderGuardadoCV($request, $id);
+  }
+
+  /**
+   * Guarda el avance y arma la respuesta comun para crear/actualizar.
+   */
+  private function responderGuardadoCV(DocenteGuardarCVRequest $request, $id = null)
+  {
+    try {
+      $datos = $request->all();
+      $res = DocenteServiceAction::guardarCV($datos, $id);
+
+      return response([
+        'mensaje' => $res->mensaje,
+        'status' => $res->status,
+        'curriculum_docente_id' => $res->curriculum_docente_id ?? null,
+        'estado_captura' => $res->estado_captura ?? null,
+        'curriculum' => $res->curriculum ?? null,
+        'documentos' => $res->documentos ?? [],
+        'faltantes' => $res->faltantes ?? [],
+      ]);
+    } catch (\Throwable $th) {
+      Log::error('Error al guardar curriculum: ' . $th->getMessage());
+      return response([
+        'mensaje' => 'Error al guardar curriculum.',
+        'status' => 300,
+      ]);
+    }
+  }
+
+  /**
+   * Envia el curriculum a revision y lo bloquea.
+   */
+  public function finalizarCV($id)
+  {
+    try {
+      $res = DocenteServiceAction::finalizarCV($id);
+
+      return response([
+        'mensaje' => $res->mensaje,
+        'status' => $res->status,
+        'estado_captura' => $res->estado_captura ?? null,
+        'curriculum' => $res->curriculum ?? null,
+        'documentos' => $res->documentos ?? [],
+        'faltantes' => $res->faltantes ?? [],
+      ]);
+    } catch (\Throwable $th) {
+      Log::error('Error al finalizar curriculum: ' . $th->getMessage());
+      return response([
+        'mensaje' => 'Error al enviar el curriculum a revisión.',
+        'status' => 300,
       ]);
     }
   }
@@ -323,28 +402,15 @@ class DocenteController extends Controller
   public function detalleCV(Request $request, $id)
   {
     try {
-      // $datos = $request->all();
-      $queryPrincipal = DB::table('curriculum_docentes')
-        ->select('*')
-        ->where('curriculum_docente_id', $id)
-        ->get()->first();
+      $curriculum = DocenteServiceAction::obtenerDetalleCV($id);
 
-      $query = DB::table('curriculum_docentes_archivos')
-        ->select(
-          'curriculum_docente_archivo_id',
-          'curriculum_docente_id',
-          'tipo',
-          'nombre',
-          'descripcion'
-        )
-        ->where('curriculum_docente_id', $id)
-        ->orderBy('nombre')
-        ->orderBy('curriculum_docente_archivo_id');
-
-      $curriculum = new stdClass();
-      $curriculum->curriculum_docente_id = $id;
-      $curriculum->nombre = $queryPrincipal->nombre;
-      $curriculum->documentos = $query->get()->toArray();
+      if (!$curriculum) {
+        return response([
+          'mensaje' => 'No se encontró el curriculum.',
+          'status' => 404,
+          'curriculum' => null,
+        ]);
+      }
 
       return response([
         'mensaje' => 'Curriculums archivos obtenidos correctamente',
@@ -352,7 +418,7 @@ class DocenteController extends Controller
         'status' => 200,
       ]);
     } catch (\Throwable $th) {
-      Log::error('Error al listar curriculum archivos' . $th);
+      Log::error('Error al listar curriculum archivos: ' . $th->getMessage());
       return response([
         'mensaje' => 'Error al listar curriculum archivos',
         'status' => 300

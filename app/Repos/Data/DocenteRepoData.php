@@ -113,4 +113,72 @@ class DocenteRepoData
 
     return $query->get()->toArray();
   }
+
+  /**
+   * Busca el expediente de curriculum mas reciente asociado a un celular.
+   * El telefono se compara sin espacios, guiones, parentesis ni signo +.
+   *
+   * @param  string $celular
+   * @return object|null
+   */
+  public static function obtenerCVPorCelular(string $celular)
+  {
+    $celularNormalizado = preg_replace('/\D+/', '', $celular);
+
+    if ($celularNormalizado === '') {
+      return null;
+    }
+
+    return DB::table('curriculum_docentes')
+      ->select('*')
+      ->whereRaw(
+        "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(numero_celular, ''), ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') = ?",
+        [$celularNormalizado]
+      )
+      ->whereRaw("LOWER(COALESCE(status, 'activo')) <> ?", [strtolower(Constants::CV_STATUS_BAJA)])
+      ->orderByRaw("CASE WHEN LOWER(COALESCE(status, 'activo')) = 'completado' THEN 0 ELSE 1 END")
+      ->orderByDesc('curriculum_docente_id')
+      ->first();
+  }
+
+  /**
+   * Obtiene un expediente de curriculum por id.
+   *
+   * @param  int $curriculumDocenteId
+   * @return object|null
+   */
+  public static function obtenerCVPorId($curriculumDocenteId)
+  {
+    return DB::table('curriculum_docentes')
+      ->select('*')
+      ->where('curriculum_docente_id', $curriculumDocenteId)
+      ->first();
+  }
+
+  /**
+   * Lista los documentos activos (sin el contenido binario) de un curriculum.
+   *
+   * @param  int $curriculumDocenteId
+   * @return array
+   */
+  public static function obtenerDocumentosActivosCV($curriculumDocenteId)
+  {
+    return DB::table('curriculum_docentes_archivos')
+      ->select(
+        'curriculum_docente_archivo_id',
+        'curriculum_docente_id',
+        'tipo',
+        'nombre',
+        'descripcion',
+        'extension',
+        'tamanio_humano',
+        'registro_fecha'
+      )
+      ->where('curriculum_docente_id', $curriculumDocenteId)
+      ->whereRaw("LOWER(COALESCE(status, 'activo')) <> ?", [strtolower(Constants::CV_STATUS_BAJA)])
+      ->orderBy('tipo')
+      ->orderByDesc('curriculum_docente_archivo_id')
+      ->get()
+      ->toArray();
+  }
 }

@@ -7,6 +7,10 @@ class Constants
   const ACTIVO_STATUS = "ACTIVO";
   const BAJA_STATUS = "BAJA";
   const ERROR_DATOS_INVALIDOS = 422;
+  // Estados del expediente de curriculum del docente
+  const CV_STATUS_EN_CAPTURA = 'Activo';
+  const CV_STATUS_COMPLETADO = 'Completado';
+  const CV_STATUS_BAJA = 'Baja';
   const TIPO_ARCHIVO_CURRICULUM = 'cv';
   const TIPO_ARCHIVO_INE = 'ine';
   const TIPO_ARCHIVO_CURP = 'curp';

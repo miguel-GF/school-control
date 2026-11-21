@@ -37,7 +37,11 @@ Route::prefix('v1')->middleware('api.key')->group(function () {
     Route::post('/login/portalcv', [AuthController::class, 'loginPortalCv']);
   });
   Route::prefix('docente')->group(function () {
+    Route::post('/cv/buscar', [DocenteController::class, 'buscarPorCelular']);
     Route::post('/cv', [DocenteController::class, 'guardarCV']);
+    Route::post('/cv/{id}', [DocenteController::class, 'actualizarCV']);
+    Route::put('/cv/{id}', [DocenteController::class, 'actualizarCV']);
+    Route::post('/cv/{id}/finalizar', [DocenteController::class, 'finalizarCV']);
     Route::get('/cvs', [DocenteController::class, 'listarCVS']);
     Route::get('/cv/{id}', [DocenteController::class, 'detalleCV']);
     Route::post('/descargar/documento', [DocenteController::class, 'descargarDocumento']);

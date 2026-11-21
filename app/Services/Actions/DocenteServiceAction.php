@@ -5,6 +5,7 @@ namespace App\Services\Actions;
 use App\Constants;
 use App\OrderConstants;
 use App\Repos\Actions\DocenteRepoAction;
+use App\Repos\Data\DocenteRepoData;
 use App\Services\BO\DocenteBO;
 use App\Services\Data\AsistenciaServiceData;
 use App\Utils;
@@ -125,181 +126,407 @@ class DocenteServiceAction
   }
 
   /**
-   * guardarCV
+   * Documentos que debe tener el expediente para poder enviarse a revision.
    *
-   * @param  mixed $datos
+   * @return array
+   */
+  public static function documentosRequeridosCV(): array
+  {
+    return [
+      Constants::TIPO_ARCHIVO_CURRICULUM => 'Currículum (CV)',
+      Constants::TIPO_ARCHIVO_PLANEACION_ACADEMICA => 'Planeación académica',
+      Constants::TIPO_ARCHIVO_INE => 'INE',
+      Constants::TIPO_ARCHIVO_CURP => 'CURP',
+      Constants::TIPO_ARCHIVO_COMPROBANTE_DOMICILIO => 'Comprobante de domicilio',
+      Constants::TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL => 'Comprobante de situación fiscal',
+      Constants::TIPO_ARCHIVO_ACTA_NACIMIENTO => 'Acta de nacimiento',
+      Constants::TIPO_ARCHIVO_CEDULA_PROFESIONAL => 'Cédula profesional',
+      Constants::TIPO_ARCHIVO_CUENTA_BANCARIA => 'Fotografía de cuenta bancaria',
+    ];
+  }
+
+  /**
+   * Campos obligatorios para poder enviar el expediente a revision.
+   *
+   * @return array
+   */
+  public static function camposRequeridosCV(): array
+  {
+    return [
+      'nombre' => 'Nombre completo',
+      'fecha_nacimiento' => 'Fecha de nacimiento',
+      'ciudad' => 'Ciudad de nacimiento',
+      'estado' => 'Estado de nacimiento',
+      'pais' => 'País de nacimiento',
+      'estado_civil' => 'Estado civil',
+      'genero' => 'Género',
+      'correo_institucional' => 'Correo institucional',
+      'numero_celular' => 'Número de celular',
+      'domicilio_calle' => 'Calle del domicilio',
+      'domicilio_no_exterior' => 'Número exterior',
+      'domicilio_colonia' => 'Colonia',
+      'domicilio_ciudad' => 'Ciudad del domicilio',
+      'domicilio_estado' => 'Estado del domicilio',
+      'domicilio_codigo_postal' => 'Código postal',
+    ];
+  }
+
+  /**
+   * Normaliza el estado del expediente para el frontend.
+   *
+   * @param  mixed $status
+   * @return string nuevo|en_captura|completado
+   */
+  public static function estadoCapturaCV($status): string
+  {
+    $status = strtolower(trim((string) $status));
+
+    if (in_array($status, ['completado', 'finalizado', 'cerrado'], true)) {
+      return 'completado';
+    }
+
+    return 'en_captura';
+  }
+
+  /**
+   * Indica si el expediente ya fue enviado a revision y por lo tanto esta bloqueado.
+   *
+   * @param  mixed $status
+   * @return bool
+   */
+  public static function esCVFinalizado($status): bool
+  {
+    return self::estadoCapturaCV($status) === 'completado';
+  }
+
+  /**
+   * Consulta un expediente por numero de celular.
+   *
+   * @param  string $celular
+   * @return array
+   */
+  public static function consultarCVPorCelular(string $celular): array
+  {
+    $curriculum = DocenteRepoData::obtenerCVPorCelular($celular);
+
+    if (!$curriculum) {
+      return [
+        'estado_captura' => 'nuevo',
+        'curriculum' => null,
+        'documentos' => [],
+      ];
+    }
+
+    return [
+      'estado_captura' => self::estadoCapturaCV($curriculum->status ?? null),
+      'curriculum' => $curriculum,
+      'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($curriculum->curriculum_docente_id),
+    ];
+  }
+
+  /**
+   * Obtiene el detalle completo de un expediente (datos + documentos).
+   *
+   * @param  int $curriculumDocenteId
+   * @return object|null
+   */
+  public static function obtenerDetalleCV($curriculumDocenteId)
+  {
+    $curriculum = DocenteRepoData::obtenerCVPorId($curriculumDocenteId);
+
+    if (!$curriculum) {
+      return null;
+    }
+
+    $curriculum->documentos = DocenteRepoData::obtenerDocumentosActivosCV($curriculumDocenteId);
+    $curriculum->estado_captura = self::estadoCapturaCV($curriculum->status ?? null);
+    $curriculum->faltantes = self::obtenerFaltantesCV($curriculum);
+
+    return $curriculum;
+  }
+
+  /**
+   * Calcula los datos y documentos obligatorios que faltan en un expediente.
+   *
+   * @param  object|null $curriculum
+   * @return array
+   */
+  public static function obtenerFaltantesCV($curriculum): array
+  {
+    if (!$curriculum) {
+      return ['Expediente'];
+    }
+
+    $faltantes = [];
+
+    foreach (self::camposRequeridosCV() as $campo => $label) {
+      $valor = $curriculum->{$campo} ?? null;
+
+      if (is_string($valor)) {
+        $vacio = trim($valor) === '';
+      } else {
+        $vacio = empty($valor);
+      }
+
+      if ($vacio) {
+        $faltantes[] = $label;
+      }
+    }
+
+    $documentos = DocenteRepoData::obtenerDocumentosActivosCV($curriculum->curriculum_docente_id);
+    $tiposDocumentos = array_map(function ($documento) {
+      return $documento->tipo;
+    }, $documentos);
+
+    foreach (self::documentosRequeridosCV() as $tipo => $label) {
+      if (!in_array($tipo, $tiposDocumentos, true)) {
+        $faltantes[] = $label;
+      }
+    }
+
+    return array_values(array_unique($faltantes));
+  }
+
+  /**
+   * Guarda el avance de un curriculum.
+   * Si no se recibe id, busca por celular para actualizar en lugar de duplicar.
+   * Si el expediente ya fue enviado a revision, no permite escribir.
+   *
+   * @param  array $datos
+   * @param  int|null $curriculumDocenteId
+   * @return stdClass
+   */
+  public static function guardarCV(array $datos, $curriculumDocenteId = null)
+  {
+    $datos['celular'] = preg_replace('/\D+/', '', (string) ($datos['celular'] ?? ''));
+
+    if ($datos['celular'] === '') {
+      return (object) [
+        'status' => 422,
+        'mensaje' => 'El número de celular es obligatorio.',
+      ];
+    }
+
+    $existentePorCelular = DocenteRepoData::obtenerCVPorCelular($datos['celular']);
+    $curriculumActual = null;
+
+    if ($curriculumDocenteId) {
+      $curriculumActual = DocenteRepoData::obtenerCVPorId($curriculumDocenteId);
+
+      if (!$curriculumActual) {
+        return (object) [
+          'status' => 404,
+          'mensaje' => 'No se encontró el expediente que intentas actualizar.',
+        ];
+      }
+
+      if (self::esCVFinalizado($curriculumActual->status ?? null)) {
+        return (object) [
+          'status' => 409,
+          'mensaje' => 'Este curriculum ya fue enviado a revisión y ya no puede modificarse.',
+          'estado_captura' => 'completado',
+          'curriculum' => $curriculumActual,
+          'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($curriculumActual->curriculum_docente_id),
+        ];
+      }
+
+      if (
+        $existentePorCelular &&
+        (int) $existentePorCelular->curriculum_docente_id !== (int) $curriculumDocenteId
+      ) {
+        return (object) [
+          'status' => 409,
+          'mensaje' => 'El número de celular ya está registrado en otro expediente.',
+        ];
+      }
+    } elseif ($existentePorCelular) {
+      if (self::esCVFinalizado($existentePorCelular->status ?? null)) {
+        return (object) [
+          'status' => 409,
+          'mensaje' => 'Este curriculum ya fue enviado a revisión y ya no puede modificarse.',
+          'estado_captura' => 'completado',
+          'curriculum' => $existentePorCelular,
+          'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($existentePorCelular->curriculum_docente_id),
+        ];
+      }
+
+      $curriculumDocenteId = $existentePorCelular->curriculum_docente_id;
+      $curriculumActual = $existentePorCelular;
+    }
+
+    try {
+      $curriculumDocenteId = DB::transaction(function () use ($datos, $curriculumDocenteId, $curriculumActual) {
+        $nombrePersona = Utils::limpiarCaracteresEspeciales(
+          !empty($datos['nombre']) ? $datos['nombre'] : ($curriculumActual->nombre ?? 'SIN NOMBRE')
+        );
+
+        if ($curriculumDocenteId) {
+          $update = DocenteBO::armarUpdateCV($datos);
+          DocenteRepoAction::actualizarCurriculum($update, $curriculumDocenteId);
+        } else {
+          $insert = DocenteBO::armarInsertCV($datos);
+          $insert['status'] = Constants::CV_STATUS_EN_CAPTURA;
+          $curriculumDocenteId = DocenteRepoAction::agregarCurriculum($insert);
+        }
+
+        $ruta = DocenteBO::armarRutaArchivo($curriculumDocenteId, $nombrePersona);
+        self::guardarArchivosCV($datos, $curriculumDocenteId, $nombrePersona, $ruta);
+
+        return $curriculumDocenteId;
+      }, 3);
+    } catch (\Throwable $th) {
+      Log::error('Error al guardar curriculum: ' . $th->getMessage());
+      return (object) [
+        'status' => 300,
+        'mensaje' => 'Error al guardar el avance del curriculum.',
+      ];
+    }
+
+    $curriculum = DocenteRepoData::obtenerCVPorId($curriculumDocenteId);
+
+    return (object) [
+      'status' => 200,
+      'mensaje' => 'Avance guardado correctamente.',
+      'curriculum_docente_id' => $curriculumDocenteId,
+      'estado_captura' => self::estadoCapturaCV($curriculum->status ?? null),
+      'curriculum' => $curriculum,
+      'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($curriculumDocenteId),
+      'faltantes' => self::obtenerFaltantesCV($curriculum),
+    ];
+  }
+
+  /**
+   * Envia el curriculum a revision y lo bloquea para el docente.
+   *
+   * @param  int $curriculumDocenteId
+   * @return stdClass
+   */
+  public static function finalizarCV($curriculumDocenteId)
+  {
+    $curriculum = DocenteRepoData::obtenerCVPorId($curriculumDocenteId);
+
+    if (!$curriculum) {
+      return (object) [
+        'status' => 404,
+        'mensaje' => 'No se encontró el expediente.',
+      ];
+    }
+
+    if (self::esCVFinalizado($curriculum->status ?? null)) {
+      return (object) [
+        'status' => 409,
+        'mensaje' => 'Este curriculum ya fue enviado a revisión.',
+        'estado_captura' => 'completado',
+        'curriculum' => $curriculum,
+        'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($curriculumDocenteId),
+        'faltantes' => [],
+      ];
+    }
+
+    $faltantes = self::obtenerFaltantesCV($curriculum);
+
+    if (!empty($faltantes)) {
+      return (object) [
+        'status' => 422,
+        'mensaje' => 'Aún falta información obligatoria para enviar tu curriculum.',
+        'faltantes' => $faltantes,
+      ];
+    }
+
+    try {
+      $fecha = now()->format('Y-m-d H:i:s');
+      DocenteRepoAction::actualizarCurriculum([
+        'status' => Constants::CV_STATUS_COMPLETADO,
+        'finalizado_fecha' => $fecha,
+        'actualizacion_fecha' => $fecha,
+      ], $curriculumDocenteId);
+    } catch (\Throwable $th) {
+      Log::error('Error al finalizar curriculum: ' . $th->getMessage());
+      return (object) [
+        'status' => 300,
+        'mensaje' => 'Error al enviar el curriculum a revisión.',
+      ];
+    }
+
+    $curriculum = DocenteRepoData::obtenerCVPorId($curriculumDocenteId);
+
+    return (object) [
+      'status' => 200,
+      'mensaje' => 'Curriculum enviado a revisión correctamente.',
+      'estado_captura' => 'completado',
+      'curriculum' => $curriculum,
+      'documentos' => DocenteRepoData::obtenerDocumentosActivosCV($curriculumDocenteId),
+      'faltantes' => [],
+    ];
+  }
+
+  /**
+   * Guarda o reemplaza los archivos del curriculum.
+   * Si se envia un archivo nuevo del mismo tipo, el anterior se marca como Baja.
+   *
+   * @param  array $datos
+   * @param  int $curriculumDocenteId
+   * @param  string $nombrePersona
+   * @param  string $ruta
    * @return void
    */
-  public static function guardarCV(array $datos)
+  private static function guardarArchivosCV(array $datos, int $curriculumDocenteId, string $nombrePersona, string $ruta): void
   {
-    DB::transaction(function () use ($datos) {
-      // Insert principal
-      $insert = DocenteBO::armarInsertCV($datos);
-      $curriculumDocenteId = DocenteRepoAction::agregarCurriculum($insert);
-      // Insert archivos
-      $nombrePersona = Utils::limpiarCaracteresEspeciales($datos['nombre']);
-      $inserts = [];
-      $archivos = [];
-      $ruta = DocenteBO::armarRutaArchivo($curriculumDocenteId, $nombrePersona);
-      if (!empty($datos['archivoCurriculum'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_CURRICULUM,
-          $datos['archivoCurriculum'],
-          $datos['descripcionCurriculum'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoCurriculum'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoIne'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_INE,
-          $datos['archivoIne'],
-          $datos['descripcionIne'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoIne'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoCurp'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_CURP,
-          $datos['archivoCurp'],
-          $datos['descripcionCurp'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoCurp'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoDomicilio'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_COMPROBANTE_DOMICILIO,
-          $datos['archivoDomicilio'],
-          $datos['descripcionDomicilio'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoDomicilio'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoSituacionFiscal'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL,
-          $datos['archivoSituacionFiscal'],
-          $datos['descripcionSituacionFiscal'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoSituacionFiscal'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoActaNacimiento'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_ACTA_NACIMIENTO,
-          $datos['archivoActaNacimiento'],
-          $datos['descripcionActaNacimiento'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoActaNacimiento'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoCedula'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_CEDULA_PROFESIONAL,
-          $datos['archivoCedula'],
-          $datos['descripcionCedula'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoCedula'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoCuentaBancaria'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_CUENTA_BANCARIA,
-          $datos['archivoCuentaBancaria'],
-          null,
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoCuentaBancaria'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($datos['archivoPlaneacionAcademica'])) {
-        $insert = DocenteBO::armarInsertArchivoCV(
-          Constants::TIPO_ARCHIVO_PLANEACION_ACADEMICA,
-          $datos['archivoPlaneacionAcademica'],
-          $datos['descripcionPlaneacionAcademica'],
-          $nombrePersona,
-          $curriculumDocenteId,
-          $ruta
-        );
-        $inserts[] = $insert;
-        $insertObj = new stdClass();
-        $insertObj->archivo = $datos['archivoPlaneacionAcademica'];
-        $insertObj->nombre = $insert['nombre'];
-        $archivos[] = $insertObj;
-      }
-      if (!empty($inserts)) {
-        DocenteRepoAction::agregarCurriculumArchivo($inserts);
-        foreach ($archivos as $archivo) {
-          // Validar el contenido del archivo
-          if (empty($archivo->archivo) || is_string($archivo->archivo)) {
-            Log::error("Contenido del archivo inválido: " . $archivo->nombre);
-            continue;
-          }
+    $mapa = [
+      'archivoCurriculum' => [Constants::TIPO_ARCHIVO_CURRICULUM, 'descripcionCurriculum'],
+      'archivoPlaneacionAcademica' => [Constants::TIPO_ARCHIVO_PLANEACION_ACADEMICA, 'descripcionPlaneacionAcademica'],
+      'archivoIne' => [Constants::TIPO_ARCHIVO_INE, 'descripcionIne'],
+      'archivoCurp' => [Constants::TIPO_ARCHIVO_CURP, 'descripcionCurp'],
+      'archivoDomicilio' => [Constants::TIPO_ARCHIVO_COMPROBANTE_DOMICILIO, 'descripcionDomicilio'],
+      'archivoSituacionFiscal' => [Constants::TIPO_ARCHIVO_COMPROBANTE_SITUACION_FISCAL, 'descripcionSituacionFiscal'],
+      'archivoActaNacimiento' => [Constants::TIPO_ARCHIVO_ACTA_NACIMIENTO, 'descripcionActaNacimiento'],
+      'archivoCedula' => [Constants::TIPO_ARCHIVO_CEDULA_PROFESIONAL, 'descripcionCedula'],
+      'archivoCuentaBancaria' => [Constants::TIPO_ARCHIVO_CUENTA_BANCARIA, null],
+    ];
 
-          // Limpiar el nombre del archivo
-          // $archivo->nombre = preg_replace('/[^A-Za-z0-9_\-.]/', '', $archivo->nombre);
+    foreach ($mapa as $campoArchivo => $configuracion) {
+      [$tipo, $campoDescripcion] = $configuracion;
+      $archivo = $datos[$campoArchivo] ?? null;
 
-          // Construir la ruta completa
-          $rutaCompleta = rtrim($ruta, '/') . '/' . basename($archivo->nombre);
-
-          // Guardar el archivo
-          try {
-            Storage::put($rutaCompleta, file_get_contents($archivo->archivo));
-            Log::info("Archivo guardado correctamente: " . $rutaCompleta);
-          } catch (Exception $e) {
-            Log::error("Error al guardar el archivo: " . $e->getMessage());
-          }
+      if (empty($archivo)) {
+        if ($campoDescripcion !== null && array_key_exists($campoDescripcion, $datos)) {
+          DocenteRepoAction::actualizarDescripcionDocumentoPorTipo(
+            $curriculumDocenteId,
+            $tipo,
+            $datos[$campoDescripcion]
+          );
         }
+        continue;
       }
-    }, 3);
+
+      if (!$archivo instanceof \Illuminate\Http\UploadedFile) {
+        continue;
+      }
+
+      $descripcion = $campoDescripcion !== null ? ($datos[$campoDescripcion] ?? null) : null;
+      $insert = DocenteBO::armarInsertArchivoCV(
+        $tipo,
+        $archivo,
+        $descripcion,
+        $nombrePersona,
+        $curriculumDocenteId,
+        $ruta
+      );
+
+      DocenteRepoAction::actualizarStatusDocumentosPorTipo(
+        $curriculumDocenteId,
+        $tipo,
+        Constants::CV_STATUS_BAJA
+      );
+      DocenteRepoAction::agregarCurriculumArchivo([$insert]);
+
+      $rutaCompleta = rtrim($ruta, '/') . '/' . basename($insert['nombre']);
+
+      try {
+        Storage::put($rutaCompleta, file_get_contents($archivo->getRealPath()));
+      } catch (Exception $e) {
+        Log::error('Error al guardar el archivo: ' . $e->getMessage());
+      }
+    }
   }
 }
